@@ -4,7 +4,7 @@
  * Plugin URI: https://angelleye.com/products/gravity-forms-braintree-payments
  * Description: Allow your customers to purchase goods and services through Gravity Forms via Braintree Payments.
  * Author: Angell EYE
- * Version: 4.0.6
+ * Version: 4.0.7
  * Author URI: https://angelleye.com
  * Text Domain: angelleye-gravity-forms-braintree
 
@@ -39,7 +39,7 @@ class AngelleyeGravityFormsBraintree{
 
     protected static $instance = null;
     public static $plugin_base_file;
-    public static $version = '4.0.6';
+    public static $version = '4.0.7';
 
     public static function getInstance()
     {
