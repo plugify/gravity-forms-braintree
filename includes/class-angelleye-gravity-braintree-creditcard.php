@@ -90,24 +90,49 @@ if ( ! class_exists( 'Angelleye_Gravity_Braintree_CreditCard_Field' ) ) {
                 <input type="hidden" id="nonce" name="payment_method_nonce"/>
             </div>
             <script type="text/javascript">
-                const form = document.getElementById('gform_<?php echo $form_id; ?>');
+                // const form = document.getElementById('gform_<?php echo $form_id; ?>');
+                if(typeof braintree === 'undefined') {
+			        // console.log("Braintree is not loaded yet. Loading...");
+			        var script = document.createElement('script');
+			        script.onload = function () {
+			            // console.log("Braintree is now loaded.");
+			            braintree.dropin.create({
+			                authorization: '<?php echo $clientToken;?>',
+			                container: '#dropin-container'
+			            }, (error, dropinInstance) => {
+			                if (error) console.error(error);
 
-                braintree.dropin.create({
-                    authorization: '<?php echo $clientToken;?>',
-                    container: '#dropin-container'
-                }, (error, dropinInstance) => {
-                    if (error) console.error(error);
+			                document.getElementById('gform_<?php echo $form_id; ?>').addEventListener('submit', event => {
+			                    event.preventDefault();
 
-                    form.addEventListener('submit', event => {
-                        event.preventDefault();
+			                    dropinInstance.requestPaymentMethod((error, payload) => {
+			                        if (error) console.error(error);
+			                        document.getElementById('nonce').value = payload.nonce;
+			                        document.getElementById('gform_<?php echo $form_id; ?>').submit();
+			                    });
+			                });
+			            });
+			        };
+			        script.src = 'https://js.braintreegateway.com/web/dropin/1.26.0/js/dropin.min.js';
+			        document.head.appendChild(script);
+			    } else {
+			    	braintree.dropin.create({
+	                    authorization: '<?php echo $clientToken;?>',
+	                    container: '#dropin-container'
+	                }, (error, dropinInstance) => {
+	                    if (error) console.error(error);
 
-                        dropinInstance.requestPaymentMethod((error, payload) => {
-                            if (error) console.error(error);
-                            document.getElementById('nonce').value = payload.nonce;
-                            form.submit();
-                        });
-                    });
-                });
+	                    document.getElementById('gform_<?php echo $form_id; ?>').addEventListener('submit', event => {
+	                        event.preventDefault();
+
+	                        dropinInstance.requestPaymentMethod((error, payload) => {
+	                            if (error) console.error(error);
+	                            document.getElementById('nonce').value = payload.nonce;
+	                            document.getElementById('gform_<?php echo $form_id; ?>').submit();
+	                        });
+	                    });
+	                });	
+			    }
             </script>
 			<?php
 			$html = ob_get_contents();
