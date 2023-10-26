@@ -103,13 +103,16 @@ if ( ! class_exists( 'Angelleye_Gravity_Braintree_CreditCard_Field' ) ) {
 			                if (error) console.error(error);
 
 			                document.getElementById('gform_<?php echo $form_id; ?>').addEventListener('submit', event => {
-			                    event.preventDefault();
+			                    var dropinField = document.getElementById('dropin-container').closest('.gfield--type-braintree_credit_card');
 
-			                    dropinInstance.requestPaymentMethod((error, payload) => {
-			                        if (error) console.error(error);
-			                        document.getElementById('nonce').value = payload.nonce;
-			                        document.getElementById('gform_<?php echo $form_id; ?>').submit();
-			                    });
+	                        	if(dropinField && getComputedStyle(dropinField).display !== 'none') {
+			                    	event.preventDefault();
+				                    dropinInstance.requestPaymentMethod((error, payload) => {
+				                        if (error) console.error(error);
+				                        document.getElementById('nonce').value = payload.nonce;
+				                        document.getElementById('gform_<?php echo $form_id; ?>').submit();
+				                    });
+				                }
 			                });
 			            });
 			        };
@@ -123,13 +126,16 @@ if ( ! class_exists( 'Angelleye_Gravity_Braintree_CreditCard_Field' ) ) {
 	                    if (error) console.error(error);
 
 	                    document.getElementById('gform_<?php echo $form_id; ?>').addEventListener('submit', event => {
-	                        event.preventDefault();
+	                        var dropinField = document.getElementById('dropin-container').closest('.gfield--type-braintree_credit_card');
 
-	                        dropinInstance.requestPaymentMethod((error, payload) => {
-	                            if (error) console.error(error);
-	                            document.getElementById('nonce').value = payload.nonce;
-	                            document.getElementById('gform_<?php echo $form_id; ?>').submit();
-	                        });
+	                        if(dropinField && getComputedStyle(dropinField).display !== 'none') {
+	                        	event.preventDefault();
+		                        dropinInstance.requestPaymentMethod((error, payload) => {
+		                            if (error) console.error(error);
+		                            document.getElementById('nonce').value = payload.nonce;
+		                            document.getElementById('gform_<?php echo $form_id; ?>').submit();
+		                        });
+	                        }
 	                    });
 	                });	
 			    }
