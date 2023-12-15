@@ -69,74 +69,81 @@ if ( ! class_exists( 'Angelleye_Gravity_Braintree_CreditCard_Field' ) ) {
 		 */
 		public function get_field_input( $form, $value = '', $entry = null ) {
 
-			$is_entry_detail = $this->is_entry_detail();
-			$is_form_editor  = $this->is_form_editor();
+            $html = '';
 
-			$form_id  = $form['id'];
-			$id       = intval( $this->id );
-			$field_id = $is_entry_detail || $is_form_editor || $form_id == 0 ? "input_$id" : 'input_' . $form_id . "_$id";
-			$form_id  = ( $is_entry_detail || $is_form_editor ) && empty( $form_id ) ? rgget( 'id' ) : $form_id;
+            try {
 
-			$Plugify_GForm_Braintree = new Plugify_GForm_Braintree();
-			$gateway                 = $Plugify_GForm_Braintree->getBraintreeGateway();
-			$clientToken             = $gateway->clientToken()->generate();
+                $is_entry_detail = $this->is_entry_detail();
+                $is_form_editor  = $this->is_form_editor();
 
-			ob_start();
+                $form_id  = $form['id'];
+                $id       = intval( $this->id );
+                $field_id = $is_entry_detail || $is_form_editor || $form_id == 0 ? "input_$id" : 'input_' . $form_id . "_$id";
+                $form_id  = ( $is_entry_detail || $is_form_editor ) && empty( $form_id ) ? rgget( 'id' ) : $form_id;
 
-			?>
-            <div class='ginput_container gform_payment_method_options ginput_container_<?php echo $this->type; ?>'
-                 id='<?php echo $field_id; ?>'>
-                <div id="dropin-container"></div>
-                <input type="hidden" id="nonce" name="payment_method_nonce"/>
-            </div>
-            <script type="text/javascript">
-                // const form = document.getElementById('gform_<?php echo $form_id; ?>');
-                if(typeof braintree === 'undefined') {
-			        // console.log("Braintree is not loaded yet. Loading...");
-			        var script = document.createElement('script');
-			        script.onload = function () {
-			            // console.log("Braintree is now loaded.");
-			            braintree.dropin.create({
-			                authorization: '<?php echo $clientToken;?>',
-			                container: '#dropin-container'
-			            }, (error, dropinInstance) => {
-			                if (error) console.error(error);
+                $Plugify_GForm_Braintree = new Plugify_GForm_Braintree();
+                $gateway                 = $Plugify_GForm_Braintree->getBraintreeGateway();
+                $clientToken             = $gateway->clientToken()->generate();
+                ob_start();
 
-			                document.getElementById('gform_<?php echo $form_id; ?>').addEventListener('submit', event => {
-			                    event.preventDefault();
+                ?>
+                <div class='ginput_container gform_payment_method_options ginput_container_<?php echo $this->type; ?>'
+                     id='<?php echo $field_id; ?>'>
+                    <div id="dropin-container"></div>
+                    <input type="hidden" id="nonce" name="payment_method_nonce"/>
+                </div>
+                <script type="text/javascript">
+                    // const form = document.getElementById('gform_<?php echo $form_id; ?>');
+                    if(typeof braintree === 'undefined') {
+                        // console.log("Braintree is not loaded yet. Loading...");
+                        var script = document.createElement('script');
+                        script.onload = function () {
+                            // console.log("Braintree is now loaded.");
+                            braintree.dropin.create({
+                                authorization: '<?php echo $clientToken;?>',
+                                container: '#dropin-container'
+                            }, (error, dropinInstance) => {
+                                if (error) console.error(error);
 
-			                    dropinInstance.requestPaymentMethod((error, payload) => {
-			                        if (error) console.error(error);
-			                        document.getElementById('nonce').value = payload.nonce;
-			                        document.getElementById('gform_<?php echo $form_id; ?>').submit();
-			                    });
-			                });
-			            });
-			        };
-			        script.src = 'https://js.braintreegateway.com/web/dropin/1.26.0/js/dropin.min.js';
-			        document.head.appendChild(script);
-			    } else {
-			    	braintree.dropin.create({
-	                    authorization: '<?php echo $clientToken;?>',
-	                    container: '#dropin-container'
-	                }, (error, dropinInstance) => {
-	                    if (error) console.error(error);
+                                document.getElementById('gform_<?php echo $form_id; ?>').addEventListener('submit', event => {
+                                    event.preventDefault();
 
-	                    document.getElementById('gform_<?php echo $form_id; ?>').addEventListener('submit', event => {
-	                        event.preventDefault();
+                                    dropinInstance.requestPaymentMethod((error, payload) => {
+                                        if (error) console.error(error);
+                                        document.getElementById('nonce').value = payload.nonce;
+                                        document.getElementById('gform_<?php echo $form_id; ?>').submit();
+                                    });
+                                });
+                            });
+                        };
+                        script.src = 'https://js.braintreegateway.com/web/dropin/1.26.0/js/dropin.min.js';
+                        document.head.appendChild(script);
+                    } else {
+                        braintree.dropin.create({
+                            authorization: '<?php echo $clientToken;?>',
+                            container: '#dropin-container'
+                        }, (error, dropinInstance) => {
+                            if (error) console.error(error);
 
-	                        dropinInstance.requestPaymentMethod((error, payload) => {
-	                            if (error) console.error(error);
-	                            document.getElementById('nonce').value = payload.nonce;
-	                            document.getElementById('gform_<?php echo $form_id; ?>').submit();
-	                        });
-	                    });
-	                });	
-			    }
-            </script>
-			<?php
-			$html = ob_get_contents();
-			ob_get_clean();
+                            document.getElementById('gform_<?php echo $form_id; ?>').addEventListener('submit', event => {
+                                event.preventDefault();
+
+                                dropinInstance.requestPaymentMethod((error, payload) => {
+                                    if (error) console.error(error);
+                                    document.getElementById('nonce').value = payload.nonce;
+                                    document.getElementById('gform_<?php echo $form_id; ?>').submit();
+                                });
+                            });
+                        });
+                    }
+                </script>
+                <?php
+                $html = ob_get_contents();
+                ob_get_clean();
+            } catch (Exception $e) {
+
+                return sprintf( esc_html__("Something went wrong. Please check merchant account details %s.", "angelleye-gravity-forms-braintree"), '<a href="'.esc_url( admin_url( 'admin.php?page=gf_settings&subview=gravity-forms-braintree' ) ).'">'.esc_html__('here', 'angelleye-gravity-forms-braintree').'</a>');
+            }
 
 			return $html;
 		}
