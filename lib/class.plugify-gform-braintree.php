@@ -32,6 +32,8 @@ final class Plugify_GForm_Braintree extends GFPaymentAddOn {
         add_action('admin_enqueue_scripts', array($this, 'enqueue_scripts_js'), 10);
         add_filter('gform_noconflict_scripts', [$this, 'include_angelleye_braintree_script_noconflict']);
         add_filter('gform_noconflict_styles', [$this, 'include_angelleye_braintree_style_noconflict']);
+        add_filter('angelleye_braintree_parameter', [$this,'manage_braintree_request_parameter'], 10, 4);
+
         // Build parent
         parent::__construct();
     }
@@ -1092,4 +1094,23 @@ final class Plugify_GForm_Braintree extends GFPaymentAddOn {
         }
     }
 
+    /**
+     * Manage Braintree request parameters.
+     *
+     * @param array $request_args Get request arguments.
+     * @param array $data Get data.
+     * @param array $form Get form.
+     * @param array $entry Get form entry
+     * @return array $request_args
+     */
+    public function manage_braintree_request_parameter( $request_args, $data, $form, $entry ) {
+
+        $merchant_account_id = !empty( $form['sub_merchant_account_id'] ) ? $form['sub_merchant_account_id'] : '';
+
+        if( !empty( $merchant_account_id ) ) {
+            $request_args['merchantAccountId'] = $merchant_account_id;
+        }
+
+        return $request_args;
+    }
 }
