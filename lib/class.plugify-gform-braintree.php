@@ -807,6 +807,69 @@ final class Plugify_GForm_Braintree extends GFPaymentAddOn {
                         )
                     )
                 )
+            ),
+            array(
+                'title'  => 'Extra Fees Settings',
+                'fields' => array(
+                    array(
+                        'name'          => 'enable_extra_fees',
+                        'type'          => 'toggle',
+                        'label'         => esc_html__( 'Enable Extra Fees', 'angelleye-gravity-forms-braintree' ),
+                        'default_value' => false,
+                        'tooltip'       => '<strong>' . __( 'Extra Fees', 'angelleye-gravity-forms-braintree' ) . '</strong>' . __( 'Enable to collect the convenience fee on credit card, debit card and ACH payment', 'angelleye-gravity-forms-braintree' ),
+                    ),
+                    array(
+                        'name'          => 'credit_card_fees',
+                        'type'          => 'text',
+                        'input_type'    => 'number',
+                        'label'         => esc_html__( 'Credit Card', 'angelleye-gravity-forms-braintree' ),
+                        'tooltip'       => '',
+                        'required'      => false,
+                        'min'           => 0,
+                        'dependency'    => array(
+                            'live'      => true,
+                            'fields'    => array(
+                                array(
+                                    'field' => 'enable_extra_fees',
+                                ),
+                            ),
+                        ),
+                    ),
+                    array(
+                        'name'          => 'debit_card_fees',
+                        'type'          => 'text',
+                        'input_type'    => 'number',
+                        'label'         => esc_html__( 'Debit Card', 'angelleye-gravity-forms-braintree' ),
+                        'tooltip'       => '',
+                        'required'      => false,
+                        'min'           => 0,
+                        'dependency'    => array(
+                            'live'      => true,
+                            'fields'    => array(
+                                array(
+                                    'field' => 'enable_extra_fees',
+                                ),
+                            ),
+                        ),
+                    ),
+                    array(
+                        'name'          => 'ach_fees',
+                        'type'          => 'text',
+                        'input_type'    => 'number',
+                        'label'         => esc_html__( 'ACH', 'angelleye-gravity-forms-braintree' ),
+                        'tooltip'       => '',
+                        'required'      => false,
+                        'min'           => 0,
+                        'dependency'    => array(
+                            'live'      => true,
+                            'fields'    => array(
+                                array(
+                                    'field' => 'enable_extra_fees',
+                                ),
+                            ),
+                        ),
+                    ),
+                )
             )
         );
     }

@@ -58,6 +58,7 @@ class AngelleyeGravityFormsBraintree{
 
         add_action('plugins_loaded', [$this, 'requirementCheck']);
 	    add_action( 'wp_enqueue_scripts', [$this, 'enqueue_scripts']);
+        add_action( 'gform_form_settings_fields', [$this, 'extra_fees_form_fields']);
     }
 
 
@@ -132,6 +133,119 @@ class AngelleyeGravityFormsBraintree{
         $is_active = $wpdb->get_var("select is_active from ".$addon_feed_table_name." where addon_slug='gravity-forms-braintree' and is_active=1");
 
         return $is_active=='1';
+    }
+
+    public function extra_fees_form_fields( $fields ) {
+
+        $extra_fee_settings = [
+            'title'      => esc_html__( 'Extra Fees Settings', 'angelleye-gravity-forms-braintree' ),
+            'fields' => [
+                [
+                    'name'          => 'override_extra_fees',
+                    'type'          => 'toggle',
+                    'label'         => esc_html__( 'Override Global Settings', 'angelleye-gravity-forms-braintree' ),
+                    'default_value' => false,
+                    'tooltip'       => '<strong>' . __( 'Override Global Settings', 'angelleye-gravity-forms-braintree' ) . '</strong>' . __( 'Override the global extra fees settings.', 'angelleye-gravity-forms-braintree' ),
+                ],
+                [
+                    'name'          => 'credit_card_fees',
+                    'type'          => 'text',
+                    'input_type'    => 'number',
+                    'label'         => esc_html__( 'Credit Card', 'angelleye-gravity-forms-braintree' ),
+                    'tooltip'       => '',
+                    'required'      => false,
+                    'min'           => 0,
+                    'class'         => 'extra-fees-input',
+                    'dependency'    => [
+                        'live'      => true,
+                        'fields'    => [
+                            [
+                                'field' => 'override_extra_fees',
+                            ]
+                        ],
+                    ],
+                ],
+                [
+                    'name'          => 'debit_card_fees',
+                    'type'          => 'text',
+                    'input_type'    => 'number',
+                    'label'         => esc_html__( 'Debit Card', 'angelleye-gravity-forms-braintree' ),
+                    'tooltip'       => '',
+                    'required'      => false,
+                    'min'           => 0,
+                    'class'         => 'extra-fees-input',
+                    'dependency'    => [
+                        'live'      => true,
+                        'fields'    => [
+                            [
+                                'field' => 'override_extra_fees',
+                            ]
+                        ],
+                    ],
+                ],
+                [
+                    'name'          => 'ach_fees',
+                    'type'          => 'text',
+                    'input_type'    => 'number',
+                    'label'         => esc_html__( 'ACH', 'angelleye-gravity-forms-braintree' ),
+                    'tooltip'       => '',
+                    'required'      => false,
+                    'min'           => 0,
+                    'class'         => 'extra-fees-input',
+                    'dependency'    => [
+                        'live'      => true,
+                        'fields'    => [
+                            [
+                                'field' => 'override_extra_fees',
+                            ]
+                        ],
+                    ],
+                ],
+                [
+                    'name'          => 'disable_extra_fees',
+                    'type'          => 'checkbox',
+                    'label'         => '',
+                    'tooltip'       => '',
+                    'required'      => false,
+                    'min'           => 0,
+                    'choices'       => [
+                        [
+                            'name' => 'disable_extra_fees',
+                            'label' => esc_html__( 'Disable Extra Fees', 'angelleye-gravity-forms-braintree' ),
+                        ]
+                    ],
+                    'dependency'    => [
+                        'live'      => true,
+                        'fields'    => [
+                            [
+                                'field' => 'override_extra_fees',
+                            ]
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $setting_key = 'extra_fees';
+
+        if (! empty( $fields['form_button'] ) ) {
+
+            $new_fields = [];
+            foreach ( $fields as $key => $field ) {
+
+                if( $key === 'form_button' ) {
+
+                    $new_fields[$setting_key] = $extra_fee_settings;
+                }
+
+                $new_fields[$key] = $field;
+            }
+
+            $fields = $new_fields;
+        } else {
+            $fields[$setting_key] = $extra_fee_settings;
+        }
+        return $fields;
     }
 }
 

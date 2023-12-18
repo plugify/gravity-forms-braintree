@@ -89,3 +89,60 @@ if (!class_exists('AngellEYE_Updater') && !function_exists('angell_updater_notic
     }
     add_action( 'wp_ajax_angelleye_updater_dismissible_admin_notice', 'angelleye_updater_dismissible_admin_notice' );
 }
+
+/**
+ * Get extra fees values using gravity form id.
+ * In this function we will manage Credit Card, Debit Card and ACH fees values.
+ *
+ * @param int $form_id Get form id.
+ * @return array $extra_fees.
+ */
+function angelleye_get_extra_fees( $form_id ) {
+
+    $extra_fees = [
+        'is_fees_enable' => false,
+        'credit_card_fees' => '0',
+        'debit_card_fees' => '0',
+        'ach_fees' => '0',
+    ];
+
+    if( empty( $form_id ) ) {
+        return $extra_fees;
+    }
+
+    try {
+
+        $gform_braintree = new Plugify_GForm_Braintree();
+        $settings = $gform_braintree->get_plugin_settings();
+
+        if( !empty( $settings['enable_extra_fees'] ) ) {
+            $extra_fees['is_fees_enable'] =  $settings['enable_extra_fees'];
+            $extra_fees['credit_card_fees'] =  !empty( $settings['credit_card_fees'] ) ? $settings['credit_card_fees'] : '';
+            $extra_fees['debit_card_fees'] =  !empty( $settings['debit_card_fees'] ) ? $settings['debit_card_fees'] : '';
+            $extra_fees['ach_fees'] =  !empty( $settings['ach_fees'] ) ? $settings['ach_fees'] : '';
+        }
+
+        $form = GFAPI::get_form( $form_id );
+
+        if( !empty( $form['override_extra_fees'] ) ) {
+
+            $extra_fees['is_fees_enable'] = empty( $form['disable_extra_fees'] );
+
+            if( empty( $form['disable_extra_fees'] ) ) {
+                $extra_fees['credit_card_fees'] = !empty( $form['credit_card_fees'] ) ? $form['credit_card_fees'] : '';
+                $extra_fees['debit_card_fees'] = !empty( $form['debit_card_fees'] ) ? $form['debit_card_fees'] : '';
+                $extra_fees['ach_fees'] = !empty($form['ach_fees']) ? $form['ach_fees'] : '';
+            } else {
+                $extra_fees['credit_card_fees'] = 0;
+                $extra_fees['debit_card_fees'] = 0;
+                $extra_fees['ach_fees'] = 0;
+            }
+
+        }
+
+    } catch (Exception $e) {
+
+    }
+
+    return $extra_fees;
+}
