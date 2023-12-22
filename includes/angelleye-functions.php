@@ -141,8 +141,112 @@ function angelleye_get_extra_fees( $form_id ) {
         }
 
     } catch (Exception $e) {
-
+        $extra_fees = [];
     }
 
     return $extra_fees;
+}
+
+function get_product_fields_by_form_id(  $form_id ) {
+
+    $product_fields = [];
+
+    $form = GFAPI::get_form($form_id);
+
+    foreach ( $form['fields'] as $field ) {
+
+        if ( $field->type === 'product' ) {
+            $field_id = !empty( $field->id ) ? $field->id : '';
+            $input_type = !empty( $field['inputType'] ) ? $field['inputType'] :  '';
+            $product_fields['type'] = $input_type;
+            switch ( $input_type ) {
+                case 'singleproduct' :
+                case 'hiddenproduct' :
+                case 'calculation' :
+                    $product_fields['group'] = 'multiple';
+                    $product_fields['base_price'] = !empty( $field['basePrice'] ) ? get_price_without_fomatter( $field['basePrice'] ) :  '';
+                    $inputs = !empty( $field['inputs'] ) ? $field['inputs'] : '';
+                    if( !empty( $inputs ) && is_array( $inputs  )  ) {
+                        foreach ( $inputs as $input ) {
+                            if( !empty( $input['label'] ) && 'Price' === $input['label']) {
+                                $product_fields['price_id'] = !empty( $input['id'] )  ? 'input_'.$input['id'] : '';
+                            } elseif ( !empty( $input['label'] ) && 'Quantity' === $input['label'] ) {
+                                $product_fields['quantity_id'] = !empty( $input['id'] )  ? 'input_'.$input['id'] : '';
+                            }
+                        }
+                    }
+                break;
+                case 'select' :
+                case 'price' :
+                case 'radio' :
+                    $product_fields['group'] = 'single';
+                    $product_fields['price_id'] = "input_{$field_id}";
+                break;
+            }
+        }
+    }
+
+    return $product_fields;
+}
+
+function get_gfb_format_price( $price = 0 ) {
+
+    $currency_code = GFCommon::get_currency();
+    $currency = RGCurrency::get_currency($currency_code);
+    $symbol_padding = !empty( $currency['symbol_padding'] ) ? $currency['symbol_padding'] : '';
+
+    $symbol_left  = ! empty( $currency['symbol_left'] ) ? $currency['symbol_left'] . $symbol_padding : '';
+    $symbol_right = ! empty( $currency['symbol_right'] ) ? $symbol_padding. $currency['symbol_right'] : '';
+
+    if( !empty( $price ) && $price > 0 ) {
+        $price = number_format( $price, $currency['decimals'], $currency['decimal_separator'], $currency['thousand_separator'] );
+    }
+
+    return $symbol_left . $price . $symbol_right;
+}
+
+function get_gfb_prices( $args = [] ) {
+
+    $form_id = !empty( $args['form_id'] ) ? $args['form_id'] : '';
+    $product_price = !empty( $args['product_price'] ) ? $args['product_price'] : 0;
+    $product_qty = !empty( $args['product_qty'] ) ? $args['product_qty'] : '';
+    $card_type = !empty( $args['card_type'] ) ? $args['card_type'] : '';
+
+    $extra_fees = angelleye_get_extra_fees( $form_id );
+
+    $extra_fee_amount = 0;
+    if( !empty( $card_type ) && $card_type === 'CreditCard' ) {
+        $extra_fee_amount = !empty( $extra_fees['credit_card_fees'] ) ? $extra_fees['credit_card_fees'] : '';
+    } elseif ( !empty( $card_type ) && $card_type === 'DebitCard' ) {
+        $extra_fee_amount = !empty( $extra_fees['debit_card_fees'] ) ? $extra_fees['debit_card_fees'] : '';
+    } elseif ( !empty( $card_type ) && $card_type === 'ACH' ) {
+        $extra_fee_amount = !empty( $extra_fees['ach_fees'] ) ? $extra_fees['ach_fees'] : '';
+    }
+
+    $subtotal = $product_price * $product_qty;
+    $convenience_fee = 0;
+    if( !empty( $subtotal ) && !empty( $extra_fee_amount ) ) {
+        $convenience_fee = ( $subtotal * $extra_fee_amount ) / 100;
+    }
+
+    $final_total = $subtotal + $convenience_fee;
+
+    return [
+        'card_type' => $card_type,
+        'product_price' => get_gfb_format_price($product_price),
+        'product_qty' => $product_qty,
+        'subtotal' => get_gfb_format_price($subtotal),
+        'convenience_fee' => get_gfb_format_price($convenience_fee),
+        'total' => get_gfb_format_price($final_total),
+        'extra_fee_amount' => $extra_fee_amount,
+    ];
+}
+
+function get_price_without_fomatter( $price ) {
+
+    if( empty( $price ) ) {
+        return 0;
+    }
+
+    return preg_replace('/[^0-9.,]/', '', $price );
 }
