@@ -77,13 +77,19 @@ if ( ! class_exists( 'Angelleye_Gravity_Braintree_CreditCard_Field' ) ) {
 			$field_id = $is_entry_detail || $is_form_editor || $form_id == 0 ? "input_$id" : 'input_' . $form_id . "_$id";
 			$form_id  = ( $is_entry_detail || $is_form_editor ) && empty( $form_id ) ? rgget( 'id' ) : $form_id;
 
+            $inputs = !empty( $this->inputs ) ? $this->inputs : '';
+            $input_field_id = !empty( $inputs[0]['id'] ) ? $inputs[0]['id'] : $id;
+
 			$Plugify_GForm_Braintree = new Plugify_GForm_Braintree();
 			$gateway                 = $Plugify_GForm_Braintree->getBraintreeGateway();
 			$clientToken             = $gateway->clientToken()->generate();
 
 			ob_start();
 
-            $product_fields = get_product_fields_by_form_id( $form_id );
+            if( ! function_exists('angelleye_get_extra_fees') ) {
+                require_once GRAVITY_FORMS_BRAINTREE_DIR_PATH.'includes/angelleye-functions.php';
+            }
+
             $extra_fees = angelleye_get_extra_fees( $form_id );
 
             $gfb_obj = [
@@ -93,15 +99,13 @@ if ( ! class_exists( 'Angelleye_Gravity_Braintree_CreditCard_Field' ) ) {
                 'card_type' => $this->type,
             ];
 
-            if( !empty( $product_fields ) ) {
-                $gfb_obj = array_merge($gfb_obj, $product_fields);
-            }
 			?>
             <div class='ginput_container gform_payment_method_options ginput_container_<?php echo $this->type; ?>'
                  id='<?php echo $field_id; ?>'>
                 <div id="dropin-container"></div>
                 <input type="hidden" id="nonce" name="payment_method_nonce"/>
                 <input type="hidden" id="payment_card_type" name="payment_card_type"/>
+                <input type="hidden" id="payment_card_details" name="input_<?php echo $input_field_id; ?>"/>
             </div>
             <script type="text/javascript">
                 var gfbObj = <?php echo json_encode($gfb_obj); ?>;
@@ -138,27 +142,21 @@ if ( ! class_exists( 'Angelleye_Gravity_Braintree_CreditCard_Field' ) ) {
                     let gformFooter = form.querySelectorAll('.gform_footer');
                     if( undefined !== gformFooter  &&  null !== gformFooter ) {
                         gformFooter.forEach(function(footer) {
-                            if( is_preview ) {
-                                footer.style.display = 'none';
-                            } else {
-                                footer.style.display = 'block';
-                            }
+                            footer.style.display = 'none';
                         });
                     }
 
                     let gformPreview = document.getElementById('gform_preview_<?php echo $form_id; ?>');
                     if( undefined !== gformPreview && null !== gformPreview ) {
-                        if( is_preview ) {
-                            gformPreview.style.display = 'block';
-                        } else {
-                            gformPreview.style.display = 'none';
-                        }
+                        gformPreview.style.display = 'block';
                     }
 
                     let gformSpinner = document.getElementById('gform_ajax_spinner_<?php echo $form_id; ?>');
                     if (undefined !== gformSpinner && null !== gformSpinner) {
                         gformSpinner.remove();
                     }
+
+                    manageScrollIntoView('gform_preview_<?php echo $form_id; ?>');
                 }
 
                 function managePreviewBeforePayment( payload ) {
@@ -195,7 +193,17 @@ if ( ! class_exists( 'Angelleye_Gravity_Braintree_CreditCard_Field' ) ) {
                     }
                 }
 
+                function manageScrollIntoView( sectionID ) {
+                    var scrollSection = document.getElementById(sectionID);
+                    if (scrollSection) {
+                        scrollSection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                }
+
                 function managePaymentActions() {
+
+                    manageScrollIntoView('gform_preview_<?php echo $form_id; ?>');
+
                     let paymentCancel = document.getElementById('gform_payment_cancel_<?php echo $form_id; ?>');
                     if( undefined !== paymentCancel && null !== paymentCancel ) {
                         paymentCancel.addEventListener('click', function () {
@@ -238,6 +246,10 @@ if ( ! class_exists( 'Angelleye_Gravity_Braintree_CreditCard_Field' ) ) {
 			                        if (error) console.error(error);
 			                        document.getElementById('nonce').value = payload.nonce;
 			                        document.getElementById('payment_card_type').value = payload.type;
+
+                                    let cardType = payload.details.cardType;
+                                    let cardLastFour = payload.details.lastFour;
+                                    document.getElementById('payment_card_details').value = cardLastFour+" ("+cardType+")";
                                     if( gfbObj.is_fees_enable ) {
                                         managePreviewBeforePayment(payload);
                                     } else {
@@ -261,9 +273,12 @@ if ( ! class_exists( 'Angelleye_Gravity_Braintree_CreditCard_Field' ) ) {
 
 	                        dropinInstance.requestPaymentMethod((error, payload) => {
 	                            if (error) console.error(error);
-                                console.log(payload);
 	                            document.getElementById('nonce').value = payload.nonce;
                                 document.getElementById('payment_card_type').value = payload.type;
+
+                                let cardType = payload.details.cardType;
+                                let cardLastFour = payload.details.lastFour;
+                                document.getElementById('payment_card_details').value = cardLastFour+" ("+cardType+")";
                                 if( gfbObj.is_fees_enable ) {
                                     managePreviewBeforePayment(payload);
                                 } else {
