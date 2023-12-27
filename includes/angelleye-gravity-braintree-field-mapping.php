@@ -20,7 +20,6 @@ class AngelleyeGravityBraintreeFieldMapping
         add_filter('angelleye_braintree_parameter', array($this, 'manage_convenience_fees'),15, 4);
         add_filter('gform_entry_created', array($this, 'manage_transaction_response'),10, 2);
         add_filter('gform_order_summary', array($this, 'gform_order_summary'),10, 5);
-
         add_filter( 'gform_field_content', array($this,'addNoticeToCreditCardForm'), 10, 5 );
     }
 
@@ -165,6 +164,15 @@ class AngelleyeGravityBraintreeFieldMapping
         return $field_content;
     }
 
+    /**
+     * Manage convenience fees on payment request.
+     *
+     * @param array $args Get payment arguments.
+     * @param array $submission_data Get form submission data.
+     * @param array $form Get selected form.
+     * @param array $entry Get form current entry.
+     * @return array
+     */
     public function manage_convenience_fees( $args, $submission_data, $form, $entry ) {
 
         $form_id = absint( rgar( $form, 'id' ) );
@@ -261,6 +269,13 @@ class AngelleyeGravityBraintreeFieldMapping
         return $args;
     }
 
+    /**
+     * Manage convenience fees on transaction response.
+     *
+     * @param array $entry Get form entry.
+     * @param array $form Get current form.
+     * @return void
+     */
     public function manage_transaction_response(  $entry, $form ) {
 
         $form_id = absint( rgar( $form, 'id' ) );
@@ -319,6 +334,16 @@ class AngelleyeGravityBraintreeFieldMapping
         gform_update_meta( $entry_id, 'gform_transaction_response', $transaction_response );
     }
 
+    /**
+     * Get gravity form pricing and order summary html.
+     *
+     * @param string $order_summary_markup Get order summary html.
+     * @param array $form Get current form.
+     * @param array $lead Get current form entry,
+     * @param array $products Get order summary products.
+     * @param string $type Format that should be used to display the summary ('html' or 'text').
+     * @return false|mixed|string
+     */
     public function gform_order_summary( $order_summary_markup, $form, $lead, $products, $type ) {
 
         $form_id   = absint( rgar( $form, 'id' ) );
