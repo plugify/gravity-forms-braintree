@@ -99,10 +99,11 @@ if ( ! class_exists( 'Angelleye_Gravity_Braintree_CreditCard_Field' ) ) {
                 'card_type' => $this->type,
             ];
 
+            $dropin_container_id = uniqid("{$form_id}_");
 			?>
             <div class='ginput_container gform_payment_method_options ginput_container_<?php echo $this->type; ?>'
                  id='<?php echo $field_id; ?>'>
-                <div id="dropin-container"></div>
+                <div id="dropin-container_<?php echo $dropin_container_id; ?>"></div>
                 <input type="hidden" id="nonce" name="payment_method_nonce"/>
                 <input type="hidden" id="payment_card_type" name="payment_card_type"/>
                 <input type="hidden" id="payment_card_details" name="input_<?php echo $input_field_id; ?>"/>
@@ -235,7 +236,7 @@ if ( ! class_exists( 'Angelleye_Gravity_Braintree_CreditCard_Field' ) ) {
 			            // console.log("Braintree is now loaded.");
 			            braintree.dropin.create({
 			                authorization: '<?php echo $clientToken;?>',
-			                container: '#dropin-container'
+			                container: '#dropin-container_<?php echo $dropin_container_id; ?>'
 			            }, (error, dropinInstance) => {
 			                if (error) console.error(error);
 
@@ -264,7 +265,7 @@ if ( ! class_exists( 'Angelleye_Gravity_Braintree_CreditCard_Field' ) ) {
 			    } else {
 			    	braintree.dropin.create({
 	                    authorization: '<?php echo $clientToken;?>',
-	                    container: '#dropin-container'
+	                    container: '#dropin-container_<?php echo $dropin_container_id; ?>'
 	                }, (error, dropinInstance) => {
 	                    if (error) console.error(error);
 
