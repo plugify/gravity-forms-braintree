@@ -305,7 +305,11 @@ final class Plugify_GForm_Braintree extends GFPaymentAddOn {
 
                 $args = apply_filters('angelleye_braintree_parameter', $args, $submission_data, $form, $entry);
 
+                $this->log_debug("Braintree_CC_Transaction::sale REQUEST => " . print_r($args, 1));
+
                 $result = $gateway->transaction()->sale($args);
+
+                $this->log_debug("Braintree_CC_Transaction::sale RESPONSE => " . print_r($result, 1));
 
                 do_action('angelleye_braintree_transaction_response', $result, $submission_data, $form, $entry );
 
@@ -398,6 +402,8 @@ final class Plugify_GForm_Braintree extends GFPaymentAddOn {
                     }
 
                     $args = apply_filters('angelleye_braintree_parameter', $args, $submission_data, $form, $entry);
+
+                    $this->log_debug("Braintree_Transaction::sale REQUEST => " . print_r($args, 1));
 
                     // Send transaction to Braintree
                     $result = $gateway->transaction()->sale($args);
@@ -507,6 +513,9 @@ final class Plugify_GForm_Braintree extends GFPaymentAddOn {
                 )
             );
             $args = apply_filters('angelleye_braintree_parameter', $args, $submission_data, $form, $entry);
+
+            $this->log_debug("Braintree_subscribe_Transaction::sale REQUEST => " . print_r($args, 1));
+
             $customerArgs = !empty($args['customer']) ? $args['customer'] : array();
             $customer_id = $this->get_customer_id($customerArgs);
             $paymentMethod = $gateway->paymentMethod()->create([
@@ -524,7 +533,12 @@ final class Plugify_GForm_Braintree extends GFPaymentAddOn {
                     $feeArgs['options']['submitForSettlement'] = 'true';
                 }
                 $feeArgs = apply_filters('angelleye_braintree_parameter', $feeArgs, $submission_data, $form, $entry);
+
+                $this->log_debug("Braintree_Feed_subscribe_Transaction::sale REQUEST => " . print_r($feeArgs, 1));
+
                 $feeResult = $gateway->transaction()->sale($feeArgs);
+
+                $this->log_debug("Braintree_Feed_subscribe_Transaction::sale RESPONSE => " . print_r($feeResult, 1));
 
                 do_action('angelleye_braintree_transaction_response', $feeResult, $submission_data, $form, $entry );
 
