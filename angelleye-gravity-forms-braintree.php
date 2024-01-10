@@ -28,6 +28,7 @@ if (!defined('GRAVITY_FORMS_BRAINTREE_ASSET_URL')) {
     define('GRAVITY_FORMS_BRAINTREE_ASSET_URL', plugin_dir_url(__FILE__));
 }
 
+
 if (!defined('PAYPAL_FOR_WOOCOMMERCE_PUSH_NOTIFICATION_WEB_URL')) {
     define('PAYPAL_FOR_WOOCOMMERCE_PUSH_NOTIFICATION_WEB_URL', 'https://www.angelleye.com/');
 }
@@ -58,8 +59,8 @@ class AngelleyeGravityFormsBraintree{
 
         add_action('plugins_loaded', [$this, 'requirementCheck']);
 	    add_action( 'wp_enqueue_scripts', [$this, 'enqueue_scripts']);
+	    add_action( 'gform_settings_save_button', [$this, 'gform_settings_save_button']);
     }
-
 
     public function enqueue_scripts() {
 	    wp_register_script('braintreegateway-dropin', "https://js.braintreegateway.com/web/dropin/1.26.0/js/dropin.min.js");
@@ -102,6 +103,7 @@ class AngelleyeGravityFormsBraintree{
 	        require_once $path . 'lib/angelleye-gravity-forms-payment-logger.php';
             require_once $path . 'includes/angelleye-gravity-braintree-field-mapping.php';
             require_once $path . 'includes/class-angelleye-gravity-braintree-creditcard.php';
+            require_once $path . 'includes/class-angelleye-gravity-braintree-reports.php';
 
             /**
              * Required functions
@@ -132,6 +134,15 @@ class AngelleyeGravityFormsBraintree{
         $is_active = $wpdb->get_var("select is_active from ".$addon_feed_table_name." where addon_slug='gravity-forms-braintree' and is_active=1");
 
         return $is_active=='1';
+    }
+
+    public function gform_settings_save_button( $html ) {
+
+        if( !empty( $_GET['page'] ) && esc_html( $_GET['page'] ) === 'gf_settings' && !empty( $_GET['subview'] ) && esc_html( $_GET['subview'] ) === 'braintree-reports' ) {
+            return  '';
+        }
+
+        return $html;
     }
 }
 
