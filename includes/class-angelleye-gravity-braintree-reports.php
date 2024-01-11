@@ -1,6 +1,10 @@
 <?php
 
+/**
+ * Class for manage braintree transaction reports.
+ */
 class AngelleyeGravityFormsBraintreeReports extends GFAddOn {
+
     protected $_version = '1.0';
     protected $_min_gravityforms_version = '2.5';
     protected $_slug = 'braintree-reports';
@@ -18,6 +22,11 @@ class AngelleyeGravityFormsBraintreeReports extends GFAddOn {
 
     public string $date_format = 'm/d/Y H:i';
 
+    /**
+     * Manage Braintree Reports instance.
+     *
+     * @return self
+     */
     public static function get_instance() {
         if (self::$_instance == null) {
             self::$_instance = new self();
@@ -26,6 +35,9 @@ class AngelleyeGravityFormsBraintreeReports extends GFAddOn {
         return self::$_instance;
     }
 
+    /**
+     * Class constructor for manage hooks and filter.
+     */
     protected function __construct() {
         parent::__construct();
 
@@ -37,10 +49,20 @@ class AngelleyeGravityFormsBraintreeReports extends GFAddOn {
         add_action( 'wp_ajax_angelleye_gform_braintree_report_delete', [$this, 'gform_braintree_report_delete']);
     }
 
+    /**
+     * Check gravity form settings elements.
+     *
+     * @return false
+     */
     public function has_deprecated_elements() {
         return false;
     }
 
+    /**
+     * Register Braintree Reports settings fields.
+     *
+     * @return array[]
+     */
     public function plugin_settings_fields() {
 
         return [
@@ -57,6 +79,11 @@ class AngelleyeGravityFormsBraintreeReports extends GFAddOn {
         ];
     }
 
+    /**
+     * Setup braintree reports csv heading fields.
+     *
+     * @return void
+     */
     public function setup_headings() {
 
         $this->default_heading = apply_filters( 'angelleye_braintree_transaction_heading', [
@@ -75,6 +102,11 @@ class AngelleyeGravityFormsBraintreeReports extends GFAddOn {
         ]);
     }
 
+    /**
+     * Get Braintree Gateway.
+     *
+     * @return bool|\Braintree\Gateway
+     */
     public static function getBraintreeGateway() {
 
         try {
@@ -87,6 +119,11 @@ class AngelleyeGravityFormsBraintreeReports extends GFAddOn {
         }
     }
 
+    /**
+     * Get merchant accounts lists.
+     *
+     * @return array[]|false
+     */
     public function merchant_account_choices() {
 
         try {
@@ -124,6 +161,12 @@ class AngelleyeGravityFormsBraintreeReports extends GFAddOn {
         return false;
     }
 
+    /**
+     * Get transaction directory path.
+     *
+     * @param bool $is_baseurl
+     * @return string
+     */
     public function get_transaction_dir_path( $is_baseurl = false) {
 
         $upload_dir = wp_upload_dir();
@@ -138,6 +181,12 @@ class AngelleyeGravityFormsBraintreeReports extends GFAddOn {
         return $is_baseurl ? $directory_url : $directory_path;
     }
 
+    /**
+     * Get generated Braintree transaction reports csv files.
+     *
+     * @param array $args
+     * @return array
+     */
     public function get_transaction_report_files( $args = [] ) {
 
         $args = wp_parse_args( $args, [
@@ -216,6 +265,11 @@ class AngelleyeGravityFormsBraintreeReports extends GFAddOn {
         ];
     }
 
+    /**
+     * Display Braintree reports html.
+     *
+     * @return void
+     */
     public function render_reports_html() {
 
         if( !empty( $_GET['subview'] ) && $_GET['subview'] === $this->_slug && !empty( $_GET['report'] ) ) {
@@ -225,6 +279,11 @@ class AngelleyeGravityFormsBraintreeReports extends GFAddOn {
         }
     }
 
+    /**
+     * Display selected report history with table format.
+     *
+     * @return void
+     */
     public function display_report_history_html() {
         $transaction_dir_path = $this->get_transaction_dir_path();
         $report_path = $transaction_dir_path.'/'.$_GET['report'];
@@ -291,6 +350,11 @@ class AngelleyeGravityFormsBraintreeReports extends GFAddOn {
         }
     }
 
+    /**
+     * Display braintree reports filter and listing.
+     *
+     * @return void
+     */
     public function display_reports_html() {
 
         $merchant_accounts = $this->merchant_account_choices();
@@ -390,6 +454,12 @@ class AngelleyeGravityFormsBraintreeReports extends GFAddOn {
         <?php
     }
 
+    /**
+     * Get braintree report page pagination.
+     *
+     * @param $args
+     * @return string
+     */
     public function get_pagination( $args = [] ) {
 
         $total_records = !empty( $args['total_records'] ) ? (int) $args['total_records']  : 0;
@@ -455,6 +525,12 @@ class AngelleyeGravityFormsBraintreeReports extends GFAddOn {
         return $pagination;
     }
 
+    /**
+     * Generate braintree report.
+     *
+     * @return void
+     * @throws \Braintree\Exception\NotFound
+     */
     public function gform_braintree_generate_report() {
         $status = false;
         $redirect_url =  '';
@@ -544,6 +620,11 @@ class AngelleyeGravityFormsBraintreeReports extends GFAddOn {
         ]);
     }
 
+    /**
+     * Delete selected braintree report.
+     *
+     * @return void
+     */
     public function gform_braintree_report_delete() {
 
         $status = false;
@@ -577,6 +658,13 @@ class AngelleyeGravityFormsBraintreeReports extends GFAddOn {
         ]);
     }
 
+    /**
+     * Filter braintree transaction.
+     *
+     * @param array|object $transaction
+     * @param array|object $line_items
+     * @return array|mixed|null
+     */
     public function filter_transactions( $transaction, $line_items ) {
 
         $response = [];
@@ -612,6 +700,13 @@ class AngelleyeGravityFormsBraintreeReports extends GFAddOn {
         return apply_filters( 'angelleye_braintree_filter_transaction', $response, $transaction, $line_items );
     }
 
+    /**
+     * Get braintree transaction value using heading.
+     *
+     * @param string $heading
+     * @param array|object $transaction
+     * @return mixed|null
+     */
     public function get_transaction_option_value( $heading, $transaction ) {
 
 
@@ -659,6 +754,13 @@ class AngelleyeGravityFormsBraintreeReports extends GFAddOn {
         return apply_filters( 'angelleye_braintree_transaction_option_value', $transaction_value, $heading, $transaction );
     }
 
+    /**
+     * Generate braintree transaction csv file.
+     *
+     * @param array $transactions
+     * @param array $args
+     * @return array
+     */
     public function generate_transaction_csv( $transactions, $args = []) {
 
         $data = [];
@@ -713,6 +815,12 @@ class AngelleyeGravityFormsBraintreeReports extends GFAddOn {
         ];
     }
 
+    /**
+     * Get braintree transaction report csv file name.
+     *
+     * @param array $args
+     * @return string
+     */
     public function get_transaction_csv_name( $args ) {
 
         $csv_name = [];

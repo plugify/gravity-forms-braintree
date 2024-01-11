@@ -136,6 +136,12 @@ class AngelleyeGravityFormsBraintree{
         return $is_active=='1';
     }
 
+    /**
+     * Hide save changes button on braintree reports page.
+     *
+     * @param $html
+     * @return mixed|string
+     */
     public function gform_settings_save_button( $html ) {
 
         if( !empty( $_GET['page'] ) && esc_html( $_GET['page'] ) === 'gf_settings' && !empty( $_GET['subview'] ) && esc_html( $_GET['subview'] ) === 'braintree-reports' ) {
