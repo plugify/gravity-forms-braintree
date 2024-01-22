@@ -32,6 +32,8 @@ final class Plugify_GForm_Braintree extends GFPaymentAddOn {
         add_action('admin_enqueue_scripts', array($this, 'enqueue_scripts_js'), 10);
         add_filter('gform_noconflict_scripts', [$this, 'include_angelleye_braintree_script_noconflict']);
         add_filter('gform_noconflict_styles', [$this, 'include_angelleye_braintree_style_noconflict']);
+        add_filter('angelleye_braintree_parameter', [$this,'manage_braintree_request_parameter'], 10, 4);
+
         // Build parent
         parent::__construct();
     }
@@ -727,7 +729,6 @@ final class Plugify_GForm_Braintree extends GFPaymentAddOn {
 
         $settings = $this->add_field_after('setupFee', $api_settings_field, $settings);
 
-
         if( !empty( $settings ) && is_array( $settings ) ) {
 
             $temp_settings = [];
@@ -845,9 +846,24 @@ final class Plugify_GForm_Braintree extends GFPaymentAddOn {
                 ],
             ];
 
+            $merchant_settings = [
+                'title'      => esc_html__( 'Merchant Account Settings', 'angelleye-gravity-forms-braintree' ),
+                'fields' => [
+                    [
+                        'name'          => 'sub_merchant_account_id',
+                        'label'         => esc_html__( 'Merchant Account ID', 'angelleye-gravity-forms-braintree' ),
+                        'type'          => 'select',
+                        'choices'       => $this->merchant_account_choices(),
+                        'required'      => false,
+                        'default_value' => '',
+                        'tooltip'       => esc_html__('By default the payment will be processed by your primary Braintree merchant account.  If you have multiple merchant accounts configured, you can specify which one this form should pay to here.', 'angelleye-gravity-forms-braintree'),
+                    ]
+                ]
+            ];
             foreach ( $settings as $setting ) {
 
                 if( !empty( $setting ) && $setting['title'] === 'Other Settings' ) {
+                    $temp_settings[] = $merchant_settings;
                     $temp_settings[] = $extra_fee_settings;
                 }
 
@@ -1379,4 +1395,63 @@ final class Plugify_GForm_Braintree extends GFPaymentAddOn {
         }
     }
 
+    /**
+     * Manage Braintree request parameters.
+     *
+     * @param array $request_args Get request arguments.
+     * @param array $data Get data.
+     * @param array $form Get form.
+     * @param array $entry Get form entry
+     * @return array $request_args
+     */
+    public function manage_braintree_request_parameter( $request_args, $data, $form, $entry ) {
+
+        $payment_feed = $this->get_payment_feed([], $form);
+        $feed_meta = !empty( $payment_feed['meta'] ) ? $payment_feed['meta'] : '';
+
+        if( !empty( $feed_meta['sub_merchant_account_id'] ) ) {
+            $request_args['merchantAccountId'] = $feed_meta['sub_merchant_account_id'];
+        }
+
+        return $request_args;
+    }
+
+    /**
+     * Get all sub merchant accounts using primary account.
+     *
+     * @return array $merchant_accounts
+     */
+    public function merchant_account_choices() {
+
+        $merchant_accounts = [
+            [
+                'label' => esc_html__( 'Select Merchant Account ID', 'angelleye-gravity-forms-braintree' ),
+                'value' => ''
+            ]
+        ];
+
+        try {
+
+            $gateway = $this->getBraintreeGateway();
+
+            if ( ! empty( $gateway ) ) {
+
+                $subMerchantAccounts = $gateway->merchantAccount()->all();
+
+                foreach ( $subMerchantAccounts as $account ) {
+
+                    $account_id = !empty( $account->id ) ? $account->id : '';
+                    $account_currency = !empty( $account->currencyIsoCode ) ? $account->currencyIsoCode : '';
+                    $merchant_accounts[] = [
+                        'label' => sprintf('%s - [%s]', $account_id, $account_currency),
+                        'value' => $account_id
+                    ];
+                }
+            }
+        } catch (Exception $exception) {
+
+        }
+
+        return $merchant_accounts;
+    }
 }
