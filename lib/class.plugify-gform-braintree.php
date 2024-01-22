@@ -16,7 +16,7 @@ final class Plugify_GForm_Braintree extends GFPaymentAddOn {
     protected $_enable_rg_autoupgrade = true;
     protected $is_payment_gateway = true;
     protected $current_feed = true;
-    protected $selected_payment_method = 'creditcard';
+    protected $selected_payment_method = 'braintree_credit_card';
 
     /**
      * Class constructor. Send __construct call to parent
@@ -32,6 +32,8 @@ final class Plugify_GForm_Braintree extends GFPaymentAddOn {
         add_action('admin_enqueue_scripts', array($this, 'enqueue_scripts_js'), 10);
         add_filter('gform_noconflict_scripts', [$this, 'include_angelleye_braintree_script_noconflict']);
         add_filter('gform_noconflict_styles', [$this, 'include_angelleye_braintree_style_noconflict']);
+        add_filter('angelleye_braintree_parameter', [$this,'manage_braintree_request_parameter'], 10, 4);
+
         // Build parent
         parent::__construct();
     }
@@ -182,6 +184,8 @@ final class Plugify_GForm_Braintree extends GFPaymentAddOn {
                         $sale_response = $gateway->transaction()->sale($sale_request);
                         $this->log_debug("Braintree_ACH_Transaction::sale RESPONSE => " . print_r($sale_response, 1));
 
+                        do_action('angelleye_braintree_transaction_response', $sale_response, $submission_data, $form, $entry );
+
                         if ($sale_response->success) {
                             do_action('angelleye_gravity_forms_response_data', $sale_response, $submission_data, '16', ( strtolower($settings['environment']) == 'sandbox' ) ? true : false, false, 'braintree_ach');
                             $authorization['is_authorized'] = true;
@@ -198,8 +202,14 @@ final class Plugify_GForm_Braintree extends GFPaymentAddOn {
 
                             $this->log_debug("Braintree_ACH::SUCCESS");
                         } else {
-                            if (isset($sale_response->transaction->processorResponseText)) {
-                                $authorization['error_message'] = sprintf('Your bank did not authorized the transaction: %s.', $sale_response->transaction->processorResponseText);
+
+                            $processorResponseText = !empty( $sale_response->message ) ? $sale_response->message : '';
+                            if( !empty( $sale_response->transaction->processorResponseText ) && strtolower( $sale_response->transaction->processorResponseText ) !== 'unavailable' ) {
+                                $processorResponseText = $sale_response->transaction->processorResponseText;
+                            }
+
+                            if ( !empty( $processorResponseText ) ) {
+                                $authorization['error_message'] = sprintf('Your bank did not authorized the transaction: %s.', $processorResponseText);
                             } else {
                                 $authorization['error_message'] = sprintf('Your bank declined the transaction, please try again or contact bank.');
                             }
@@ -241,6 +251,15 @@ final class Plugify_GForm_Braintree extends GFPaymentAddOn {
         if ($this->selected_payment_method == 'braintree_ach') {
             foreach ($validation_result['form']['fields'] as &$field) {
                 if ($field->type == 'braintree_ach') {
+                    $field->failed_validation = true;
+                    $field->validation_message = $authorization_result['error_message'];
+                    $credit_card_page = $field->pageNumber;
+                    break;
+                }
+            }
+        } elseif ( $this->selected_payment_method === 'braintree_credit_card') {
+            foreach ($validation_result['form']['fields'] as &$field) {
+                if ($field->type == 'braintree_credit_card') {
                     $field->failed_validation = true;
                     $field->validation_message = $authorization_result['error_message'];
                     $credit_card_page = $field->pageNumber;
@@ -296,11 +315,21 @@ final class Plugify_GForm_Braintree extends GFPaymentAddOn {
                     'amount' => $submission_data['payment_amount'],
                     'paymentMethodNonce' => $_POST['payment_method_nonce']
                 );
-                $args = apply_filters('angelleye_braintree_parameter', $args, $submission_data, $form, $entry);
+
                 if ($settings['settlement'] == 'Yes') {
                     $args['options']['submitForSettlement'] = 'true';
                 }
+
+                $args = apply_filters('angelleye_braintree_parameter', $args, $submission_data, $form, $entry);
+
+                $this->log_debug("Braintree_CC_Transaction::sale REQUEST => " . print_r($args, 1));
+
                 $result = $gateway->transaction()->sale($args);
+
+                $this->log_debug("Braintree_CC_Transaction::sale RESPONSE => " . print_r($result, 1));
+
+                do_action('angelleye_braintree_transaction_response', $result, $submission_data, $form, $entry );
+
                 if ($result->success) {
                     do_action('angelleye_gravity_forms_response_data', $result, $submission_data, '16', (strtolower($settings['environment']) == 'sandbox') ? true : false, false, 'braintree');
                     $authorization['is_authorized'] = true;
@@ -314,8 +343,14 @@ final class Plugify_GForm_Braintree extends GFPaymentAddOn {
                         'payment_method' => 'Credit Card'
                     );
                 } else {
-                    if (isset($result->transaction->processorResponseText)) {
-                        $authorization['error_message'] .= sprintf('. Your bank said: %s.', $result->transaction->processorResponseText);
+
+                    $processorResponseText = !empty( $result->message ) ? $result->message : '';
+                    if( !empty( $result->transaction->processorResponseText ) && strtolower( $result->transaction->processorResponseText ) !== 'unavailable' ) {
+                        $processorResponseText = $result->transaction->processorResponseText;
+                    }
+
+                    if ( !empty( $processorResponseText ) ) {
+                        $authorization['error_message'] .= sprintf('. Your bank said: %s.', $processorResponseText);
                     }
                 }
             }
@@ -380,7 +415,7 @@ final class Plugify_GForm_Braintree extends GFPaymentAddOn {
                     'cvv' => $submission_data['card_security_code']
                 )
             );
-            $args = apply_filters('angelleye_braintree_parameter', $args, $submission_data, $form, $entry);
+
             try {
                 $gateway = $this->getBraintreeGateway();
                 if ($gateway) {
@@ -388,9 +423,18 @@ final class Plugify_GForm_Braintree extends GFPaymentAddOn {
                     if ($settings['settlement'] == 'Yes') {
                         $args['options']['submitForSettlement'] = 'true';
                     }
+
+                    $args = apply_filters('angelleye_braintree_parameter', $args, $submission_data, $form, $entry);
+
+                    $this->log_debug("Braintree_Transaction::sale REQUEST => " . print_r($args, 1));
+
                     // Send transaction to Braintree
                     $result = $gateway->transaction()->sale($args);
+
                     $this->log_debug("Braintree_Transaction::sale RESPONSE => " . print_r($result, 1));
+
+                    do_action('angelleye_braintree_transaction_response', $result, $submission_data, $form, $entry );
+
                     // Update response to reflect successful payment
                     if ($result->success) {
                         do_action('angelleye_gravity_forms_response_data', $result, $submission_data, '16', (strtolower($settings['environment']) == 'sandbox') ? true : false, false, 'braintree');
@@ -407,8 +451,14 @@ final class Plugify_GForm_Braintree extends GFPaymentAddOn {
                     } else {
                         // Append gateway response text to error message if it exists. If it doesn't exist, a more hardcore
                         // failure has occured and it won't do the user any good to see it other than a general error message
-                        if (isset($result->transaction->processorResponseText)) {
-                            $authorization['error_message'] .= sprintf('. Your bank said: %s.', $result->transaction->processorResponseText);
+
+                        $processorResponseText = !empty( $result->message ) ? $result->message : '';
+                        if( !empty( $result->transaction->processorResponseText ) && strtolower( $result->transaction->processorResponseText ) !== 'unavailable' ) {
+                            $processorResponseText = $result->transaction->processorResponseText;
+                        }
+
+                        if ( !empty( $processorResponseText ) ) {
+                            $authorization['error_message'] .= sprintf('. Your bank said: %s.', $processorResponseText);
                         }
                     }
                 }
@@ -492,6 +542,9 @@ final class Plugify_GForm_Braintree extends GFPaymentAddOn {
                 )
             );
             $args = apply_filters('angelleye_braintree_parameter', $args, $submission_data, $form, $entry);
+
+            $this->log_debug("Braintree_subscribe_Transaction::sale REQUEST => " . print_r($args, 1));
+
             $customerArgs = !empty($args['customer']) ? $args['customer'] : array();
             $customer_id = $this->get_customer_id($customerArgs);
             $paymentMethod = $gateway->paymentMethod()->create([
@@ -509,7 +562,15 @@ final class Plugify_GForm_Braintree extends GFPaymentAddOn {
                     $feeArgs['options']['submitForSettlement'] = 'true';
                 }
                 $feeArgs = apply_filters('angelleye_braintree_parameter', $feeArgs, $submission_data, $form, $entry);
+
+                $this->log_debug("Braintree_Feed_subscribe_Transaction::sale REQUEST => " . print_r($feeArgs, 1));
+
                 $feeResult = $gateway->transaction()->sale($feeArgs);
+
+                $this->log_debug("Braintree_Feed_subscribe_Transaction::sale RESPONSE => " . print_r($feeResult, 1));
+
+                do_action('angelleye_braintree_transaction_response', $feeResult, $submission_data, $form, $entry );
+
                 if ($feeResult->success) {
                     $authorization['captured_payment'] = array(
                         'is_success' => true,
@@ -520,8 +581,13 @@ final class Plugify_GForm_Braintree extends GFPaymentAddOn {
                     );
                 } else {
                     $setup_fee_result = false;
-                    if (isset($result->transaction->processorResponseText)) {
-                        $authorization['error_message'] .= sprintf('. Your bank said: %s.', $result->transaction->processorResponseText);
+
+                    $processorResponseText = !empty( $result->message ) ? $result->message : '';
+                    if( !empty( $result->transaction->processorResponseText ) && strtolower( $result->transaction->processorResponseText ) !== 'unavailable' ) {
+                        $processorResponseText = $result->transaction->processorResponseText;
+                    }
+                    if ( !empty( $processorResponseText ) ) {
+                        $authorization['error_message'] .= sprintf('. Your bank said: %s.', $processorResponseText);
                     }
                 }
             }
@@ -662,6 +728,150 @@ final class Plugify_GForm_Braintree extends GFPaymentAddOn {
         );
 
         $settings = $this->add_field_after('setupFee', $api_settings_field, $settings);
+
+        if( !empty( $settings ) && is_array( $settings ) ) {
+
+            $temp_settings = [];
+
+            $extra_fee_settings = [
+                'title'      => esc_html__( 'Extra Fee Settings (%)', 'angelleye-gravity-forms-braintree' ),
+                'fields' => [
+                    [
+                        'name'          => 'override_extra_fees',
+                        'type'          => 'toggle',
+                        'label'         => esc_html__( 'Override Global Settings', 'angelleye-gravity-forms-braintree' ),
+                        'default_value' => false,
+                        'tooltip'       => '<strong>' . __( 'Override Global Settings', 'angelleye-gravity-forms-braintree' ) . '</strong>' . __( 'If you would like this specific form/feed to use different values than what are configured in the global Braintree settings, you may override them here.', 'angelleye-gravity-forms-braintree' ),
+                    ],
+                    [
+                        'name'          => 'extra_fee_label',
+                        'type'          => 'text',
+                        'label'         => esc_html__( 'Extra Fee Label', 'angelleye-gravity-forms-braintree' ),
+                        'tooltip'       => '',
+                        'required'      => false,
+                        'default_value' => esc_html__( 'Convenience Fee', 'angelleye-gravity-forms-braintree'),
+                        'placeholder'   => esc_html__( 'Convenience Fee', 'angelleye-gravity-forms-braintree'),
+                        'class'         => 'extra-fees-input',
+                        'dependency'    => [
+                            'live'      => true,
+                            'fields'    => [
+                                [
+                                    'field' => 'override_extra_fees',
+                                ]
+                            ]
+                        ]
+                    ],
+                    [
+                        'name'          => 'credit_card_fees',
+                        'type'          => 'text',
+                        'input_type'    => 'number',
+                        'label'         => esc_html__( 'Credit Card', 'angelleye-gravity-forms-braintree' ),
+                        'tooltip'       => '',
+                        'required'      => false,
+                        'default_value' => '0.00',
+                        'placeholder'   => '0.00',
+                        'min'           => '0',
+                        'class'         => 'extra-fees-input',
+                        'dependency'    => [
+                            'live'      => true,
+                            'fields'    => [
+                                [
+                                    'field' => 'override_extra_fees',
+                                ]
+                            ],
+                        ],
+                    ],
+                    [
+                        'name'          => 'debit_card_fees',
+                        'type'          => 'text',
+                        'input_type'    => 'number',
+                        'label'         => esc_html__( 'Debit Card', 'angelleye-gravity-forms-braintree' ),
+                        'tooltip'       => '',
+                        'required'      => false,
+                        'default_value' => '0.00',
+                        'placeholder'   => '0.00',
+                        'min'           => '0',
+                        'class'         => 'extra-fees-input',
+                        'dependency'    => [
+                            'live'      => true,
+                            'fields'    => [
+                                [
+                                    'field' => 'override_extra_fees',
+                                ]
+                            ],
+                        ],
+                    ],
+                    [
+                        'name'          => 'ach_fees',
+                        'type'          => 'text',
+                        'input_type'    => 'number',
+                        'label'         => esc_html__( 'ACH', 'angelleye-gravity-forms-braintree' ),
+                        'tooltip'       => '',
+                        'required'      => false,
+                        'default_value' => '0.00',
+                        'placeholder'   => '0.00',
+                        'min'           => '0',
+                        'class'         => 'extra-fees-input',
+                        'dependency'    => [
+                            'live'      => true,
+                            'fields'    => [
+                                [
+                                    'field' => 'override_extra_fees',
+                                ]
+                            ],
+                        ],
+                    ],
+                    [
+                        'name'          => 'disable_extra_fees',
+                        'type'          => 'checkbox',
+                        'label'         => '',
+                        'tooltip'       => '',
+                        'required'      => false,
+                        'min'           => 0,
+                        'choices'       => [
+                            [
+                                'name' => 'disable_extra_fees',
+                                'label' => esc_html__( 'Disable Extra Fee', 'angelleye-gravity-forms-braintree' ),
+                            ]
+                        ],
+                        'dependency'    => [
+                            'live'      => true,
+                            'fields'    => [
+                                [
+                                    'field' => 'override_extra_fees',
+                                ]
+                            ],
+                        ],
+                    ],
+                ],
+            ];
+
+            $merchant_settings = [
+                'title'      => esc_html__( 'Merchant Account Settings', 'angelleye-gravity-forms-braintree' ),
+                'fields' => [
+                    [
+                        'name'          => 'sub_merchant_account_id',
+                        'label'         => esc_html__( 'Merchant Account ID', 'angelleye-gravity-forms-braintree' ),
+                        'type'          => 'select',
+                        'choices'       => $this->merchant_account_choices(),
+                        'required'      => false,
+                        'default_value' => '',
+                        'tooltip'       => esc_html__('By default the payment will be processed by your primary Braintree merchant account.  If you have multiple merchant accounts configured, you can specify which one this form should pay to here.', 'angelleye-gravity-forms-braintree'),
+                    ]
+                ]
+            ];
+            foreach ( $settings as $setting ) {
+
+                if( !empty( $setting ) && $setting['title'] === 'Other Settings' ) {
+                    $temp_settings[] = $merchant_settings;
+                    $temp_settings[] = $extra_fee_settings;
+                }
+
+                $temp_settings[] = $setting;
+            }
+
+            $settings = $temp_settings;
+        }
 
         // Return sanitized settings
         return $settings;
@@ -806,6 +1016,96 @@ final class Plugify_GForm_Braintree extends GFPaymentAddOn {
                             )
                         )
                     )
+                )
+            ),
+            array(
+                'title'  => esc_html__( 'Extra Fee Settings', 'angelleye-gravity-forms-braintree' ),
+                'fields' => array(
+                    array(
+                        'name'          => 'enable_extra_fees',
+                        'type'          => 'toggle',
+                        'label'         => esc_html__( 'Enable Extra Fee (%)', 'angelleye-gravity-forms-braintree' ),
+                        'default_value' => false,
+                        'tooltip'       => '<strong>' . __( 'Extra Fee', 'angelleye-gravity-forms-braintree' ) . '</strong>' . __( 'Enable this and set a percentage (%) to collect a convenience fee on credit card, debit card and/or ACH payments.', 'angelleye-gravity-forms-braintree' ),
+                    ),
+                    array(
+                        'name'          => 'extra_fee_label',
+                        'type'          => 'text',
+                        'label'         => esc_html__( 'Extra Fee Label', 'angelleye-gravity-forms-braintree' ),
+                        'tooltip'       => '',
+                        'required'      => false,
+                        'default_value' => esc_html__( 'Convenience Fee', 'angelleye-gravity-forms-braintree'),
+                        'placeholder'   => esc_html__( 'Convenience Fee', 'angelleye-gravity-forms-braintree'),
+                        'class'         => 'extra-fees-input',
+                        'dependency'    => array(
+                            'live'      => true,
+                            'fields'    => array(
+                                array(
+                                    'field' => 'enable_extra_fees',
+                                ),
+                            ),
+                        ),
+                    ),
+                    array(
+                        'name'          => 'credit_card_fees',
+                        'type'          => 'text',
+                        'input_type'    => 'number',
+                        'label'         => esc_html__( 'Credit Card', 'angelleye-gravity-forms-braintree' ),
+                        'tooltip'       => '',
+                        'required'      => false,
+                        'default_value' => '0.00',
+                        'placeholder'   => '0.00',
+                        'min'           => '0',
+                        'class'         => 'extra-fees-input',
+                        'dependency'    => array(
+                            'live'      => true,
+                            'fields'    => array(
+                                array(
+                                    'field' => 'enable_extra_fees',
+                                ),
+                            ),
+                        ),
+                    ),
+                    array(
+                        'name'          => 'debit_card_fees',
+                        'type'          => 'text',
+                        'input_type'    => 'number',
+                        'label'         => esc_html__( 'Debit Card', 'angelleye-gravity-forms-braintree' ),
+                        'tooltip'       => '',
+                        'required'      => false,
+                        'default_value' => '0.00',
+                        'placeholder'   => '0.00',
+                        'min'           => '0',
+                        'class'         => 'extra-fees-input',
+                        'dependency'    => array(
+                            'live'      => true,
+                            'fields'    => array(
+                                array(
+                                    'field' => 'enable_extra_fees',
+                                ),
+                            ),
+                        ),
+                    ),
+                    array(
+                        'name'          => 'ach_fees',
+                        'type'          => 'text',
+                        'input_type'    => 'number',
+                        'label'         => esc_html__( 'ACH', 'angelleye-gravity-forms-braintree' ),
+                        'tooltip'       => '',
+                        'required'      => false,
+                        'default_value' => '0.00',
+                        'placeholder'   => '0.00',
+                        'min'           => '0',
+                        'class'         => 'extra-fees-input',
+                        'dependency'    => array(
+                            'live'      => true,
+                            'fields'    => array(
+                                array(
+                                    'field' => 'enable_extra_fees',
+                                ),
+                            ),
+                        ),
+                    ),
                 )
             )
         );
@@ -958,8 +1258,11 @@ final class Plugify_GForm_Braintree extends GFPaymentAddOn {
         $translation_array = [];
         $settings = $this->get_plugin_settings();
         if ($settings !== false) {
+            $translation_array['ajax_url'] = admin_url( 'admin-ajax.php' );
+            $translation_array['ach_bt_nonce'] = wp_create_nonce('preview-payment-nonce');
             $translation_array['ach_bt_token'] = @$settings['tokenization-key'];
             $translation_array['ach_business_name'] = @$settings['business-name'];
+            $translation_array['is_admin'] = is_admin();
         }
 
         $scripts = array(
@@ -971,7 +1274,7 @@ final class Plugify_GForm_Braintree extends GFPaymentAddOn {
                 'in_footer' => false,
                 'callback' => array($this, 'localize_scripts'),
                 'enqueue' => array(
-                    array('field_types' => array('braintree_ach'))
+                    array('field_types' => array('braintree_ach','braintree_credit_card'))
                 )
             ),
             array(
@@ -982,7 +1285,7 @@ final class Plugify_GForm_Braintree extends GFPaymentAddOn {
                 'in_footer' => false,
                 'callback' => array($this, 'localize_scripts'),
                 'enqueue' => array(
-                    array('field_types' => array('braintree_ach'))
+                    array('field_types' => array('braintree_ach','braintree_credit_card'))
                 )
             ),
             array(
@@ -993,7 +1296,7 @@ final class Plugify_GForm_Braintree extends GFPaymentAddOn {
                 'in_footer' => false,
                 'callback' => array($this, 'localize_scripts'),
                 'enqueue' => array(
-                    array('field_types' => array('braintree_ach'))
+                    array('field_types' => array('braintree_ach','braintree_credit_card'))
                 )
             ),
             array(
@@ -1010,7 +1313,7 @@ final class Plugify_GForm_Braintree extends GFPaymentAddOn {
 //						'admin_page' => array( 'form_settings' ),
 //						'tab'        => 'simpleaddon'
 //					)
-                    array('field_types' => array('braintree_ach'))
+                    array('field_types' => array('braintree_ach','braintree_credit_card'))
                 )
             ),
         );
@@ -1103,4 +1406,63 @@ final class Plugify_GForm_Braintree extends GFPaymentAddOn {
         }
     }
 
+    /**
+     * Manage Braintree request parameters.
+     *
+     * @param array $request_args Get request arguments.
+     * @param array $data Get data.
+     * @param array $form Get form.
+     * @param array $entry Get form entry
+     * @return array $request_args
+     */
+    public function manage_braintree_request_parameter( $request_args, $data, $form, $entry ) {
+
+        $payment_feed = $this->get_payment_feed([], $form);
+        $feed_meta = !empty( $payment_feed['meta'] ) ? $payment_feed['meta'] : '';
+
+        if( !empty( $feed_meta['sub_merchant_account_id'] ) ) {
+            $request_args['merchantAccountId'] = $feed_meta['sub_merchant_account_id'];
+        }
+
+        return $request_args;
+    }
+
+    /**
+     * Get all sub merchant accounts using primary account.
+     *
+     * @return array $merchant_accounts
+     */
+    public function merchant_account_choices() {
+
+        $merchant_accounts = [
+            [
+                'label' => esc_html__( 'Select Merchant Account ID', 'angelleye-gravity-forms-braintree' ),
+                'value' => ''
+            ]
+        ];
+
+        try {
+
+            $gateway = $this->getBraintreeGateway();
+
+            if ( ! empty( $gateway ) ) {
+
+                $subMerchantAccounts = $gateway->merchantAccount()->all();
+
+                foreach ( $subMerchantAccounts as $account ) {
+
+                    $account_id = !empty( $account->id ) ? $account->id : '';
+                    $account_currency = !empty( $account->currencyIsoCode ) ? $account->currencyIsoCode : '';
+                    $merchant_accounts[] = [
+                        'label' => sprintf('%s - [%s]', $account_id, $account_currency),
+                        'value' => $account_id
+                    ];
+                }
+            }
+        } catch (Exception $exception) {
+
+        }
+
+        return $merchant_accounts;
+    }
 }

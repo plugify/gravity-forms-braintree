@@ -86,6 +86,8 @@
 #gform_braintree_mapping table{
     width: 800px;
 }
+.gform_settings_form .gform-settings-panel .extra-fees-input,
+.gform_settings_form .gform-settings-field .extra-fees-input {width: 100%;}
 .transactions-report-lists {margin-top: 1rem;}
 .transactions-report-filter {margin-bottom: 1rem;}
 .transactions-report-wrap .field-row {display: flex;justify-content: space-between;align-items: flex-end;gap: 1rem;flex-wrap: wrap;}
