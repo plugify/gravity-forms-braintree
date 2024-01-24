@@ -110,7 +110,9 @@ if ( ! class_exists( 'Angelleye_Gravity_Braintree_CreditCard_Field' ) ) {
                     <input type="hidden" id="payment_card_details_<?php echo $form_id; ?>" name="input_<?php echo $input_field_id; ?>"/>
                 </div>
                 <script type="text/javascript">
-                    initBraintreeDropIn('<?php echo $form_id; ?>', <?php echo json_encode($gfb_obj); ?>);
+                    jQuery( document ).ready(function() {
+                        initBraintreeDropIn('<?php echo $form_id; ?>', <?php echo json_encode($gfb_obj); ?>);
+                    });
                 </script>
                 <?php
                 $html = ob_get_contents();
