@@ -29,6 +29,11 @@ if ( ! class_exists( 'Angelleye_Gravity_Braintree_CreditCard_Field' ) ) {
 			return __( 'Braintree Credit Card', 'angelleye-gravity-forms-braintree' );
 		}
 
+		/**
+         * Return the field description, for use in the form editor.
+         *
+		 * @return string
+		 */
 		public function get_form_editor_field_description() {
 			return sprintf( esc_attr__( 'Add a %s field to your form. Enable %s Payment method in your form. Default is Braintree Credit Card', 'angelleye-gravity-forms-braintree' ), $this->get_form_editor_field_title(), implode(', ', get_braintree_payment_methods()) );
 		}
