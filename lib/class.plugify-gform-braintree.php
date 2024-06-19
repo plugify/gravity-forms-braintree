@@ -953,7 +953,7 @@ final class Plugify_GForm_Braintree extends GFPaymentAddOn {
 						'default_value' => '',
 						'tooltip'       => esc_html__('By default the Braintree Credit Card payment method in your form. Enable multiple payment methods.', 'angelleye-gravity-forms-braintree'),
 					],
-					[
+					/*[
 						'name'          => 'google_pay_merchant_id',
 						'type'          => 'text',
 						'label'         => esc_html__( 'Google Pay Merchant ID', 'angelleye-gravity-forms-braintree' ),
@@ -968,7 +968,7 @@ final class Plugify_GForm_Braintree extends GFPaymentAddOn {
 								]
 							],
 						],
-					],
+					],*/
 				]
 			];
 

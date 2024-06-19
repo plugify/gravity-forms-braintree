@@ -121,7 +121,7 @@ if ( ! class_exists( 'Angelleye_Gravity_Braintree_CreditCard_Field' ) ) {
                     'container_id' => $dropin_container_id,
                     'nonce' => wp_create_nonce('preview-payment-nonce'),
                     'payment_methods'  => angelleye_get_payment_methods($form_id),
-                    'google_pay_merchant_id'  => angelleye_get_google_pay_merchant_id($form_id),
+                    //'google_pay_merchant_id'  => angelleye_get_google_pay_merchant_id($form_id),
                     'pricing_fields' => $pricing_fields,
                 ];
 

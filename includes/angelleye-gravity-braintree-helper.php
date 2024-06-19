@@ -441,8 +441,8 @@ function get_braintree_payment_methods()  {
 	return [
 		'paypal' => __('PayPal', 'angelleye-gravity-forms-braintree'),
 		'venmo' => __('Venmo', 'angelleye-gravity-forms-braintree'),
-		'apple_pay' => __('Apple Pay', 'angelleye-gravity-forms-braintree'),
-		'google_pay' => __('Google Pay', 'angelleye-gravity-forms-braintree'),
+		/*'apple_pay' => __('Apple Pay', 'angelleye-gravity-forms-braintree'),
+		'google_pay' => __('Google Pay', 'angelleye-gravity-forms-braintree'),*/
 	];
 }
 
