@@ -143,7 +143,7 @@ if ( ! class_exists( 'Angelleye_Gravity_Braintree_CreditCard_Field' ) ) {
                     jQuery( document ).ready(function() {
                         initBraintreeDropIn('<?php echo $form_id; ?>', <?php echo json_encode($gfb_obj); ?>);
 
-                        jQuery(document).on('change', '#gform_<?php echo $form_id; ?> input, #gform_<?php echo $form_id; ?> select', function(){
+                        /*jQuery(document).on('change', '#gform_<?php echo $form_id; ?> input, #gform_<?php echo $form_id; ?> select', function(){
                             var Gform = jQuery('#gform_<?php echo $form_id; ?>');
                             braintreeDropInAddLoader(Gform);
                             jQuery('#dropin-container_<?php echo $dropin_container_id; ?>').html('');
@@ -165,7 +165,7 @@ if ( ! class_exists( 'Angelleye_Gravity_Braintree_CreditCard_Field' ) ) {
 
                         function braintreeDropInRemoveLoader() {
                             jQuery('.loader-wrap').remove();
-                        }
+                        }*/
                     });
                 </script>
                 <?php
