@@ -1,30 +1,25 @@
 <?php
-/**
- * Braintree Library Version
- *
- * @copyright  2010 Braintree Payment Solutions
- */
+
+namespace Braintree;
 
 /**
+ * Braintree Library Version
  * stores version information about the Braintree library
- *
- *
- * @copyright  2010 Braintree Payment Solutions
  */
-final class Braintree_Version
+class Version
 {
     /**
      * class constants
      */
-    const MAJOR = 2;
-    const MINOR = 26;
+    const MAJOR = 6;
+    const MINOR = 3;
     const TINY = 0;
 
     /**
      * @ignore
      * @access protected
      */
-    protected function  __construct()
+    protected function __construct()
     {
     }
 
@@ -34,6 +29,6 @@ final class Braintree_Version
      */
     public static function get()
     {
-        return self::MAJOR.'.'.self::MINOR.'.'.self::TINY;
+        return self::MAJOR . '.' . self::MINOR . '.' . self::TINY;
     }
 }

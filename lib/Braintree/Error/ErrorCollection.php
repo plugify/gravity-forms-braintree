@@ -1,16 +1,14 @@
 <?php
+
+namespace Braintree\Error;
+
+use Braintree\Util;
+use Countable;
+use JsonSerializable;
+
 /**
  *
  * Error handler
- *
- * @package    Braintree
- * @subpackage Errors
- * @category   Errors
- * @copyright  2010 Braintree Payment Solutions
- */
-
-
-/**
  * Handles validation errors
  *
  * Contains a read-only property $error which is a ValidationErrorCollection
@@ -18,20 +16,29 @@
  * @package    Braintree
  * @subpackage Errors
  * @category   Errors
- * @copyright  2010 Braintree Payment Solutions
  *
  * @property-read object $errors
  */
-class Braintree_Error_ErrorCollection
+class ErrorCollection implements Countable, JsonSerializable
 {
     private $_errors;
 
     public function __construct($errorData)
     {
         $this->_errors =
-                new Braintree_Error_ValidationErrorCollection($errorData);
+                new ValidationErrorCollection($errorData);
     }
 
+    /**
+     * Return count of items in collection
+     * Implements countable
+     *
+     * @return integer
+     */
+    public function count()
+    {
+        return $this->deepSize();
+    }
 
     /**
      * Returns all of the validation errors at all levels of nesting in a single, flat array.
@@ -76,11 +83,13 @@ class Braintree_Error_ErrorCollection
     {
         $pieces = preg_split("/[\[\]]+/", $field, 0, PREG_SPLIT_NO_EMPTY);
         $errors = $this;
-        foreach(array_slice($pieces, 0, -1) as $key) {
-            $errors = $errors->forKey(Braintree_Util::delimiterToCamelCase($key));
-            if (!isset($errors)) { return array(); }
+        foreach (array_slice($pieces, 0, -1) as $key) {
+            $errors = $errors->forKey(Util::delimiterToCamelCase($key));
+            if (!isset($errors)) {
+                return [];
+            }
         }
-        $finalKey = Braintree_Util::delimiterToCamelCase(end($pieces));
+        $finalKey = Util::delimiterToCamelCase(end($pieces));
         return $errors->onAttribute($finalKey);
     }
 
@@ -88,7 +97,7 @@ class Braintree_Error_ErrorCollection
      * Returns the errors at the given nesting level (see forKey) in a single, flat array:
      *
      * <code>
-     *   $result = Braintree_Customer::create(...);
+     *   $result = Customer::create(...);
      *   $customerErrors = $result->errors->forKey('customer')->shallowAll();
      * </code>
      */
@@ -101,7 +110,7 @@ class Braintree_Error_ErrorCollection
      *
      * @ignore
      */
-    public function  __get($name)
+    public function __get($name)
     {
         $varName = "_$name";
         return isset($this->$varName) ? $this->$varName : null;
@@ -111,8 +120,19 @@ class Braintree_Error_ErrorCollection
      *
      * @ignore
      */
-    public function  __toString()
+    public function __toString()
     {
         return sprintf('%s', $this->_errors);
+    }
+
+    /**
+     * Implementation of JsonSerializable
+     *
+     * @ignore
+     * @return array
+     */
+    public function jsonSerialize()
+    {
+        return $this->_errors->deepAll();
     }
 }

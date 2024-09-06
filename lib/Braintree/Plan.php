@@ -1,21 +1,26 @@
 <?php
-class Braintree_Plan extends Braintree
+
+namespace Braintree;
+
+/**
+ * @property-read \Braintree\Addon[] $addOns
+ * @property-read string $id
+ * @property-read int|null $billingDayOfMonth
+ * @property-read int $billingFrequency
+ * @property-read \DateTime $createdAt
+ * @property-read string $currencyIsoCode
+ * @property-read string|null $description
+ * @property-read \Braintree\Discount[] $discounts
+ * @property-read string $name
+ * @property-read int|null $numberOfBillingCycles
+ * @property-read string $price
+ * @property-read int|null $trialDuration
+ * @property-read string|null $trialDurationUnit
+ * @property-read boolean $trialPeriod
+ * @property-read \DateTime $updatedAt
+ */
+class Plan extends Base
 {
-    public static function all()
-    {
-        $response = Braintree_Http::get('/plans');
-        if (key_exists('plans', $response)){
-            $plans = array("plan" => $response['plans']);
-        } else {
-            $plans = array("plan" => array());
-        }
-
-        return Braintree_Util::extractAttributeAsArray(
-            $plans,
-            'plan'
-        );
-    }
-
     public static function factory($attributes)
     {
         $instance = new self();
@@ -28,28 +33,36 @@ class Braintree_Plan extends Braintree
     {
         $this->_attributes = $attributes;
 
-        $addOnArray = array();
+        $addOnArray = [];
         if (isset($attributes['addOns'])) {
-            foreach ($attributes['addOns'] AS $addOn) {
-                $addOnArray[] = Braintree_AddOn::factory($addOn);
+            foreach ($attributes['addOns'] as $addOn) {
+                $addOnArray[] = AddOn::factory($addOn);
             }
         }
         $this->_attributes['addOns'] = $addOnArray;
 
-        $discountArray = array();
+        $discountArray = [];
         if (isset($attributes['discounts'])) {
-            foreach ($attributes['discounts'] AS $discount) {
-                $discountArray[] = Braintree_Discount::factory($discount);
+            foreach ($attributes['discounts'] as $discount) {
+                $discountArray[] = Discount::factory($discount);
             }
         }
         $this->_attributes['discounts'] = $discountArray;
 
-        $planArray = array();
+        $planArray = [];
         if (isset($attributes['plans'])) {
-            foreach ($attributes['plans'] AS $plan) {
-                $planArray[] = Braintree_Plan::factory($plan);
+            foreach ($attributes['plans'] as $plan) {
+                $planArray[] = self::factory($plan);
             }
         }
         $this->_attributes['plans'] = $planArray;
+    }
+
+
+    // static methods redirecting to gateway
+
+    public static function all()
+    {
+        return Configuration::gateway()->plan()->all();
     }
 }

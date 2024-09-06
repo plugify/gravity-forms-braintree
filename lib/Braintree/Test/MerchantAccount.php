@@ -1,12 +1,14 @@
 <?php
+
+namespace Braintree\Test;
+
 /**
  * Merchant Account constants used for testing purposes
  *
  * @package    Braintree
  * @subpackage Test
- * @copyright  2013 Braintree Payment Solutions
  */
-class Braintree_Test_MerchantAccount
+class MerchantAccount
 {
     public static $approve = "approve_me";
 
@@ -14,6 +16,4 @@ class Braintree_Test_MerchantAccount
     public static $accountNotAuthorizedContactUs = "account_not_authorized__contact";
     public static $bankRejectedUpdateFundingInformation = "bank_rejected__update";
     public static $bankRejectedNone = "bank_rejected__none";
-
-
 }

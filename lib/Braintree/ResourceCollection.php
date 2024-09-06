@@ -1,20 +1,18 @@
 <?php
-/**
- * Braintree ResourceCollection
- *
- * @package    Braintree
- * @subpackage Utility
- * @copyright  2010 Braintree Payment Solutions
- */
+
+namespace Braintree;
+
+use Iterator;
 
 /**
+ * Braintree ResourceCollection
  * ResourceCollection is a container object for result data
  *
  * stores and retrieves search results and aggregate data
  *
  * example:
  * <code>
- * $result = Braintree_Customer::all();
+ * $result = Customer::all();
  *
  * foreach($result as $transaction) {
  *   print_r($transaction->id);
@@ -23,12 +21,12 @@
  *
  * @package    Braintree
  * @subpackage Utility
- * @copyright  2010 Braintree Payment Solutions
  */
-class Braintree_ResourceCollection implements Iterator
+class ResourceCollection implements Iterator
 {
-    private $_index;
     private $_batchIndex;
+    private $_ids;
+    private $_index;
     private $_items;
     private $_pageSize;
     private $_pager;
@@ -38,10 +36,10 @@ class Braintree_ResourceCollection implements Iterator
      *
      * expects an array of attributes with literal keys
      *
-     * @param array $attributes
-     * @param array $pagerAttribs
+     * @param array $response
+     * @param array $pager
      */
-    public function  __construct($response, $pager)
+    public function __construct($response, $pager)
     {
         $this->_pageSize = $response["searchResults"]["pageSize"];
         $this->_ids = $response["searchResults"]["ids"];
@@ -64,7 +62,7 @@ class Braintree_ResourceCollection implements Iterator
     public function firstItem()
     {
         $ids = $this->_ids;
-        $page = $this->_getPage(array($ids[0]));
+        $page = $this->_getPage([$ids[0]]);
         return $page[0];
     }
 
@@ -82,7 +80,7 @@ class Braintree_ResourceCollection implements Iterator
     }
 
     /**
-     * rewinds thtestIterateOverResultse collection to the first item when iterating with foreach
+     * rewinds the testIterateOverResults collection to the first item when iterating with foreach
      */
     public function rewind()
     {
@@ -113,12 +111,9 @@ class Braintree_ResourceCollection implements Iterator
 
     private function _getNextPage()
     {
-        if (empty($this->_ids))
-        {
-            $this->_items = array();
-        }
-        else
-        {
+        if (empty($this->_ids)) {
+            $this->_items = [];
+        } else {
             $this->_items = $this->_getPage(array_slice($this->_ids, $this->_batchIndex, $this->_pageSize));
             $this->_batchIndex += $this->_pageSize;
             $this->_index = 0;
@@ -128,21 +123,31 @@ class Braintree_ResourceCollection implements Iterator
     /**
      * requests the next page of results for the collection
      *
-     * @return none
+     * @return void
      */
     private function _getPage($ids)
     {
-        $className = $this->_pager['className'];
-        $classMethod = $this->_pager['classMethod'];
-        $methodArgs = array();
+        $object = $this->_pager['object'];
+        $method = $this->_pager['method'];
+        $methodArgs = [];
         foreach ($this->_pager['methodArgs'] as $arg) {
             array_push($methodArgs, $arg);
         }
         array_push($methodArgs, $ids);
 
         return call_user_func_array(
-            array($className, $classMethod),
+            [$object, $method],
             $methodArgs
         );
+    }
+
+    /**
+     * returns all IDs in the collection
+     *
+     * @return array
+     */
+    public function getIds()
+    {
+        return $this->_ids;
     }
 }

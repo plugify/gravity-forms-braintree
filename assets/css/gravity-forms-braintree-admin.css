@@ -1,0 +1,126 @@
+.notice.notice-success.angelleye-notice {
+    padding: 0 !important;
+    margin: 5px 0 10px;
+    background: #FFF;
+    overflow: hidden;
+    -webkit-border-radius: 6px;
+    border-radius: 6px;
+    -webkit-box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.05);
+    position: relative;
+    z-index: 1;
+    min-height: 80px;
+    display: table; /* The magic ingredient! */
+    font: 13px "Open Sans", sans-serif;
+}
+.angelleye-notice > div {
+    display: table-cell;
+    vertical-align: middle;
+    cursor: default;
+    line-height: 1.5;
+}
+.angelleye-notice-logo-push {
+    background-repeat: no-repeat;
+    background-position: 50% 50%;
+}
+.angelleye-notice-logo-push span {
+    display: block;
+    margin: 0px 10px 0px 10px;
+}
+.notice.notice-success.angelleye-notice {
+    font: 13px "Open Sans", sans-serif;
+        line-height: normal;
+}
+.angelleye-notice-message {
+    color: #23282D;
+    font-size: 13px;
+    font-weight: normal;
+    line-height: 20px;
+    padding: 3px 5px;
+    -webkit-font-smoothing: antialiased;
+    width: 100%;
+}
+.angelleye-notice-message h3 {
+    margin: 4px 0px !important;
+}
+.angelleye-notice-message-inner {
+    margin-bottom: 10px;
+}
+.angelleye-notice-message p {
+    margin: 3px 0px !important;
+    padding: 0px;
+}
+.angelleye-notice-action {
+    padding-top: 5px;
+}
+.angelleye-notice-cta {
+    border-left: 1px solid #E5E5E5;
+    background: #F8F8F8;
+    padding: 0 30px;
+    position: relative;
+    white-space: nowrap;
+}
+.wp-core-ui .angelleye-notice-cta button,
+.wp-core-ui .angelleye-notice-cta .button-primary:active {
+    vertical-align: middle;
+}
+.angelleye-notice-dismiss {
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    color: #C5C5C5;
+    -webkit-font-smoothing: antialiased;
+}
+.updater-dismissible {
+    padding-right: 38px;
+    position: relative;
+}
+
+.alert-notification-custom-fields:after,.alert-notification-custom-fields:before {
+    content:"";display:table;clear:both;
+}
+.alert-notification-custom-fields{
+    padding:0.01em 16px;color:#000!important;background-color:#ffffcc!important;margin-top:16px;
+}
+
+#gform_braintree_mapping table{
+    width: 800px;
+}
+.gform_settings_form .gform-settings-panel .extra-fees-input,
+.gform_settings_form .gform-settings-field .extra-fees-input {width: 100%;}
+.transactions-report-lists {margin-top: 1rem;}
+.transactions-report-filter {margin-bottom: 1rem;}
+.transactions-report-wrap .field-row {display: flex;justify-content: space-between;align-items: flex-end;gap: 1rem;flex-wrap: wrap;}
+.transactions-report-wrap .field-row .filed-col {flex: 1;}
+.transactions-report-filter label {display: block;padding-bottom: 0.5rem;font-weight: bold;}
+.transactions-report-filter input, .transactions-report-filter select, .transactions-report-filter button.button {min-height: 40px;}
+.transactions-report-lists .description {display: block;width: 100%;font-size: 10px;color: #646970;margin-top: 10px;}
+.transactions-report-lists .description span {display: block;margin-top: 5px;}
+.transactions-report-lists ul.actions {display: flex !important;gap: 10px;justify-content: flex-start;align-items: center;}
+.transactions-report-lists ul.actions a.report-actions, .transaction-report-history-details a {text-decoration: none;color: #5f6284;}
+.filter-pagination {width: 100%;display: flex;margin: 10px 0;justify-content: center;align-items: center;}
+.filter-pagination ul.pagination {display: flex;gap: 10px;}
+.filter-pagination ul.pagination li {margin: 0;}
+.filter-pagination ul.pagination  a {display: block;text-decoration: none;padding: 10px 15px;background: transparent;color: #5f6285;font-size: 0.8rem;}
+.filter-pagination ul.pagination li.active a {background: #5f6285;color: #FFF;}
+.notifications {width: 100%;display: block;margin-bottom: 10px;}
+.notifications .notification {display: block;background: #FFF;padding: 10px;margin: 0;border: 1px solid #CCC;border-left-width: 5px;box-shadow: 0 1px 1px rgba(0,0,0,.04)}
+.notifications .notification.error{border-left-color: #d63638;}
+.notifications .notification.success{border-left-color: #00a32a;}
+.loader {position: relative;}
+.loader:after {content: "" !important;border: 2px solid #FFF;border-top: 2px solid #5f6285;border-radius: 50%;width: 10px;height: 10px;animation: spin 2s linear infinite;display: inline-flex;margin-left: 10px;}
+#gform_setting_braintree_reports_details{max-width: calc(900px - 20px);}
+.transaction-report-history-wrap {overflow-x: scroll;}
+.transactions-report-lists table .file-name {max-width: 300px;word-wrap: break-word;}
+@media (min-width: 320px) {
+    .transactions-report-wrap .field-row {flex-direction: row;}
+    .transactions-report-wrap .field-row .filed-col{flex: 0 0 100%;}
+}
+
+@media (min-width: 600px) {
+    .transactions-report-wrap .field-row .filed-col {flex: 0 0 calc( 50% - 0.5rem);max-width: 50%;}
+}
+
+@media (min-width: 1024px) {
+    .transactions-report-wrap .field-row .filed-col {flex: 1;max-width: unset;}
+}

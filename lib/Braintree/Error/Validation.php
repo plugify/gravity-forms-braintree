@@ -1,11 +1,8 @@
 <?php
-/**
- * error object returned as part of a validation error collection
- *
- * @package    Braintree
- * @subpackage Error
- * @copyright  2010 Braintree Payment Solutions
- */
+
+namespace Braintree\Error;
+
+use Braintree\Util;
 
 /**
  * error object returned as part of a validation error collection
@@ -13,27 +10,27 @@
  *
  * <b>== More information ==</b>
  *
- * For more detailed information on Validation errors, see {@link http://www.braintreepayments.com/gateway/validation-errors http://www.braintreepaymentsolutions.com/gateway/validation-errors}
+ * // phpcs:ignore Generic.Files.LineLength
+ * For more detailed information on Validation errors, see {@link https://developers.braintreepayments.com/reference/general/validation-errors/overview/php https://developers.braintreepayments.com/reference/general/validation-errors/overview/php}
  *
  * @package    Braintree
  * @subpackage Error
- * @copyright  2010 Braintree Payment Solutions
  *
  * @property-read string $attribute
  * @property-read string $code
  * @property-read string $message
  */
-class Braintree_Error_Validation
+class Validation
 {
-   private $_attribute;
-   private $_code;
-   private $_message;
+    private $_attribute;
+    private $_code;
+    private $_message;
 
     /**
      * @ignore
      * @param array $attributes
      */
-    public function  __construct($attributes)
+    public function __construct($attributes)
     {
         $this->_initializeFromArray($attributes);
     }
@@ -42,13 +39,13 @@ class Braintree_Error_Validation
      * @ignore
      * @access protected
      * @param array $attributes array of properties to set - single level
-     * @return none
+     * @return void
      */
     private function _initializeFromArray($attributes)
     {
-        foreach($attributes AS $name => $value) {
+        foreach ($attributes as $name => $value) {
             $varName = "_$name";
-            $this->$varName = Braintree_Util::delimiterToCamelCase($value, '_');
+            $this->$varName = Util::delimiterToCamelCase($value, '_');
         }
     }
 
@@ -56,7 +53,7 @@ class Braintree_Error_Validation
      *
      * @ignore
      */
-    public function  __get($name)
+    public function __get($name)
     {
         $varName = "_$name";
         return isset($this->$varName) ? $this->$varName : null;
