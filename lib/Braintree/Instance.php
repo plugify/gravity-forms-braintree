@@ -1,38 +1,31 @@
 <?php
+
+namespace Braintree;
+
 /**
  * Braintree Class Instance template
  *
- * @package    Braintree
- * @subpackage Utility
- * @copyright  2010 Braintree Payment Solutions
- */
-
-/**
- * abstract instance template for various objects
- *
- * @package    Braintree
- * @subpackage Utility
- * @copyright  2010 Braintree Payment Solutions
  * @abstract
  */
-abstract class Braintree_Instance
+abstract class Instance
 {
+    protected $_attributes = [];
+
     /**
      *
-     * @param array $aAttribs
+     * @param array $attributes
      */
-    public function  __construct($attributes)
+    public function __construct($attributes)
     {
         if (!empty($attributes)) {
             $this->_initializeFromArray($attributes);
         }
     }
 
-
     /**
      * returns private/nonexistent instance properties
      * @access public
-     * @param var $name property name
+     * @param string $name property name
      * @return mixed contents of instance properties
      */
     public function __get($name)
@@ -53,29 +46,56 @@ abstract class Braintree_Instance
      */
     public function __isset($name)
     {
-        return array_key_exists($name, $this->_attributes);
+        return isset($this->_attributes[$name]);
     }
 
     /**
      * create a printable representation of the object as:
      * ClassName[property=value, property=value]
-     * @return var
+     * @return string
      */
-    public function  __toString()
+    public function __toString()
     {
-        $objOutput = Braintree_Util::implodeAssociativeArray($this->_attributes);
-        return get_class($this) .'['.$objOutput.']';
+        $objOutput = Util::implodeAssociativeArray($this->_attributes);
+        return get_class($this) . '[' . $objOutput . ']';
     }
     /**
      * initializes instance properties from the keys/values of an array
      * @ignore
      * @access protected
      * @param <type> $aAttribs array of properties to set - single level
-     * @return none
+     * @return void
      */
     private function _initializeFromArray($attributes)
     {
         $this->_attributes = $attributes;
     }
 
+    /**
+     * Implementation of JsonSerializable
+     *
+     * @ignore
+     * @return array
+     */
+    public function jsonSerialize()
+    {
+        return $this->_attributes;
+    }
+
+    /**
+     * Implementation of to an Array
+     *
+     * @ignore
+     * @return array
+     */
+    public function toArray()
+    {
+        return array_map(function ($value) {
+            if (!is_array($value)) {
+                return method_exists($value, 'toArray') ? $value->toArray() : $value;
+            } else {
+                return $value;
+            }
+        }, $this->_attributes);
+    }
 }

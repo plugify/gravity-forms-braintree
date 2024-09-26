@@ -1,6 +1,13 @@
 <?php
-final class Braintree_Disbursement extends Braintree
+
+namespace Braintree;
+
+class Disbursement extends Base
 {
+
+    const TYPE_CREDIT = "credit";
+    const TYPE_DEBIT  = "debit";
+
     private $_merchantAccount;
 
     protected function _initialize($disbursementAttribs)
@@ -9,17 +16,18 @@ final class Braintree_Disbursement extends Braintree
         $this->merchantAccountDetails = $disbursementAttribs['merchantAccount'];
 
         if (isset($disbursementAttribs['merchantAccount'])) {
-            $this->_set('merchantAccount',
-                Braintree_MerchantAccount::factory($disbursementAttribs['merchantAccount'])
+            $this->_set(
+                'merchantAccount',
+                MerchantAccount::factory($disbursementAttribs['merchantAccount'])
             );
         }
     }
 
     public function transactions()
     {
-        $collection = Braintree_Transaction::search(array(
-            Braintree_TransactionSearch::ids()->in($this->transactionIds)
-        ));
+        $collection = Transaction::search([
+            TransactionSearch::ids()->in($this->transactionIds),
+        ]);
 
         return $collection;
     }
@@ -31,19 +39,29 @@ final class Braintree_Disbursement extends Braintree
         return $instance;
     }
 
-    public function  __toString()
+    public function __toString()
     {
-        $display = array(
+        $display = [
             'id', 'merchantAccountDetails', 'exceptionMessage', 'amount',
             'disbursementDate', 'followUpAction', 'retry', 'success',
-            'transactionIds'
-            );
+            'transactionIds', 'disbursementType'
+            ];
 
-        $displayAttributes = array();
-        foreach ($display AS $attrib) {
+        $displayAttributes = [];
+        foreach ($display as $attrib) {
             $displayAttributes[$attrib] = $this->$attrib;
         }
         return __CLASS__ . '[' .
-                Braintree_Util::attributesToString($displayAttributes) .']';
+                Util::attributesToString($displayAttributes) . ']';
+    }
+
+    public function isDebit()
+    {
+        return $this->disbursementType == Disbursement::TYPE_DEBIT;
+    }
+
+    public function isCredit()
+    {
+        return $this->disbursementType == Disbursement::TYPE_CREDIT;
     }
 }

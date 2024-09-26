@@ -1,20 +1,13 @@
 <?php
-/**
- * super class for all Braintree exceptions
- *
- * @package    Braintree
- * @subpackage Exception
- * @copyright  2010 Braintree Payment Solutions
- */
 
+namespace Braintree;
 
 /**
  * super class for all Braintree exceptions
  *
  * @package    Braintree
  * @subpackage Exception
- * @copyright  2010 Braintree Payment Solutions
  */
-class Braintree_Exception extends Exception
+class Exception extends \Exception
 {
 }

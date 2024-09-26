@@ -1,25 +1,28 @@
 # Integrate Gravity Forms with Braintree
 
-Braintree Payments is a payment gateway provider owned by eBAY Inc, which allows you to proces credit card payments without the need for a bank merchant account and full PCI-compliance. No sensitive data such as credit card numbers are stored on your server, Braintree takes care of everything.
-
-#### If you have found this plugin useful, consider taking a moment to rate it, or perhaps even a small donation.
+Braintree Payments is a payment gateway provider owned by PayPal which allows you to process credit card payments without the need for a bank merchant account and full PCI-compliance. No sensitive data such as credit card numbers are stored on your server, Braintree takes care of everything.
 
 ## Installation
 
-1. Upload the `gravity-forms-braintree` folder to the `/wp-content/plugins/` directory.
-2. Activate the plugin through the 'Plugins' menu in WordPress.
-3. Navigate to the Form you wish to setup with a Braintree feed.
-4. Under Form Settings, choose the Braintree option.
+### Automatic installation
+
+Automatic installation is the easiest option as WordPress handles the file transfers itself and you don't need to leave your web browser. To do an automatic install of Gravity Forms Braintree Payments, log in to your WordPress dashboard, navigate to the Plugins menu and click Add New.
+
+In the search field type Gravity Forms Braintree Payments and click Search Plugins. Once you've found our plugin (make sure it says "by Angell EYE") you can view details about it such as the the rating and description. Most importantly, of course, you can install it by simply clicking Install Now.
+
+### Manual Installation
+
+1. Unzip the files and upload the folder into your plugins folder (/wp-content/plugins/) overwriting older versions if they exist
+2. Activate the plugin in your WordPress admin area.
+
+### Usage
+
+1. Navigate to the Form you wish to setup with a Braintree feed.
+2. Under Form Settings, choose the Braintree option.
 
 ## Features
 
-* Seamlessly integrates your Gravity Forms credit card forms with Braintree Payments
-* Supports both production and sandbox environments, enabling you to test payments before going live
-* Form entries will only be created when payment is successful
-* Quick and easy setup
-
-## Subscriptions
-The plugin does not currently support Braintree Subscriptions. Keep a look out for it in a future version
-
-## Upgrade Notice
-If you are updating from a version previous to 1.0, your existing feeds will not work. Please make sure you check all your feeds and ensure they function correctly.
+* Seamlessly integrates your Gravity Forms credit card forms with Braintree Payments.
+* Supports both production and sandbox environments, enabling you to test payments before going live.
+* Form entries will only be created when payment is successful.
+* Quick and easy setup.

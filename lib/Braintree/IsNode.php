@@ -1,20 +1,23 @@
 <?php
 
-class Braintree_IsNode
+namespace Braintree;
+
+class IsNode
 {
-    function __construct($name)
+    public function __construct($name)
     {
         $this->name = $name;
-        $this->searchTerms = array();
+        $this->searchTerms = [];
     }
 
-    function is($value)
+    public function is($value)
     {
         $this->searchTerms['is'] = strval($value);
+
         return $this;
     }
 
-    function toParam()
+    public function toParam()
     {
         return $this->searchTerms;
     }
